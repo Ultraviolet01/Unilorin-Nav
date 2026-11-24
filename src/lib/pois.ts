@@ -8,8 +8,10 @@ export interface Poi {
   id: string; name: string; category: Category; lat: number; lng: number;
   description: string; photo?: string; campus: "main" | "mini" | "uith"; verified?: boolean; source?: string; aliases?: string[];
 }
+export type Mode = "walk" | "cab";
+export const WALK_M_PER_MIN = 80, CAB_M_PER_MIN = 330; // about 5 km/h on foot; about 20 km/h by cab on campus roads with stops
 export interface RouteOption {
-  label: string; kind: string; walkMinutes: number; coordinates: [number, number][]; custom: boolean; traced?: boolean;
+  label: string; kind: string; walkMinutes: number /* minutes for this route's own mode (walking or cab) */; coordinates: [number, number][]; custom: boolean; traced?: boolean; mode?: Mode;
 }
 
 export const CATEGORY_META: Record<Category, { icon: string; color: string }> = {
@@ -66,9 +68,9 @@ const getGraph = () => (graph ??= buildGraph((paths as any).features));
 
 /** 1) hand-made routes in routes.json, 2) routes over the traced walking network, 3) straight-line estimate. */
 export interface LL { id: string; lat: number; lng: number }
-export function getRoutes(from: LL, to: LL): RouteOption[] {
+export function getRoutes(from: LL, to: LL, mode: Mode = "walk"): RouteOption[] {
   const out: RouteOption[] = [];
-  for (const f of (routes as any).features) {
+  for (const f of mode === "walk" ? (routes as any).features : []) { // hand-made routes are walking routes
     const p = f.properties || {};
     const fwd = p.from === from.id && p.to === to.id, rev = p.from === to.id && p.to === from.id;
     if (!fwd && !rev) continue;
@@ -81,14 +83,19 @@ export function getRoutes(from: LL, to: LL): RouteOption[] {
   const g = getGraph(), sa = snap(g, from.lng, from.lat), sb = snap(g, to.lng, to.lat);
   if (sa !== null && sb !== null && sa !== sb) {
     const wrap = (r: { coordinates: [number, number][]; meters: number }): RouteOption["coordinates"] => [a, ...r.coordinates, b];
-    const minutes = (m: number) => Math.max(1, Math.round((m + distanceM(a, g.nodes[sa]) + distanceM(b, g.nodes[sb])) / 80));
+    const pace = mode === "cab" ? CAB_M_PER_MIN : WALK_M_PER_MIN;
+    const minutes = (m: number) => Math.max(1, Math.round((m + distanceM(a, g.nodes[sa]) + distanceM(b, g.nodes[sb])) / pace));
+    if (mode === "cab") { // a cab stays on roads; footpaths are only used where a pin sits on one
+      const byRoad = shortest(g, sa, sb, { footpath: 30, covered: 30 });
+      if (byRoad) return [{ label: "Fastest by road", kind: "cab", walkMinutes: minutes(byRoad.meters), coordinates: wrap(byRoad), custom: false, traced: true, mode: "cab" }];
+    }
     const fast = shortest(g, sa, sb), roads = shortest(g, sa, sb, { footpath: 4 });
     if (fast) out.push({ label: "Shortest path", kind: "shortcut", walkMinutes: minutes(fast.meters), coordinates: wrap(fast), custom: false, traced: true });
     if (roads && fast && Math.abs(roads.meters - fast.meters) > 5)
       out.push({ label: "Mostly main roads", kind: "main", walkMinutes: minutes(roads.meters), coordinates: wrap(roads), custom: false, traced: true });
     if (out.length) return out;
   }
-  return [{ label: "Direct line (estimate)", kind: "estimate", walkMinutes: Math.max(1, Math.round(distanceM(a, b) / 80)), coordinates: [a, b], custom: false }];
+  return [{ label: "Direct line (estimate)", kind: "estimate", walkMinutes: Math.max(1, Math.round(distanceM(a, b) / (mode === "cab" ? CAB_M_PER_MIN : WALK_M_PER_MIN))), coordinates: [a, b], custom: false, mode }];
 }
 
 export const routeMeters = (c: [number, number][]) => c.slice(1).reduce((s, p, i) => s + distanceM(c[i], p), 0);

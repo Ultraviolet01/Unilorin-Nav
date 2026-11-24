@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { type Category, type LL, type Poi, type RouteOption, getRoutes, loadPois, routeMeters, searchPois } from "@/lib/pois";
+import { type Category, type LL, type Mode, type Poi, type RouteOption, CAB_M_PER_MIN, WALK_M_PER_MIN, getRoutes, loadPois, routeMeters, searchPois } from "@/lib/pois";
 import { minutesLeft, prepare, remainingLine, smoothHeading, snapToRoute, type Prepared } from "@/lib/nav";
 import { HAS_AWS_MAP, getMapStyle, type Base } from "@/lib/mapStyle";
 import { CAT, CHIP_ORDER, Icon, iconPath } from "./gm/icons";
@@ -67,10 +67,11 @@ export default function Navigator() {
   const [selected, setSelected] = useState<Poi | null>(null), [full, setFull] = useState(false);
   const [dir, setDir] = useState<Dir | null>(null);
   // live navigation ("Start"): follow the walker's GPS dot along the chosen route
-  const [nav, setNav] = useState<{ dest: Poi } | null>(null), [following, setFollowing] = useState(true);
+  const [mode, setMode] = useState<Mode>("walk"), modeRef = useRef<Mode>("walk");
+  const [nav, setNav] = useState<{ dest: Poi; mode: Mode } | null>(null), [following, setFollowing] = useState(true);
   const [navInfo, setNavInfo] = useState({ remain: 0, minutes: 0, arrive: "", arrived: false, wait: true, off: false });
   const navWatch = useRef<number | null>(null), navMarker = useRef<maplibregl.Marker | null>(null), navRoute = useRef<Prepared | null>(null), navDest = useRef<Poi | null>(null);
-  const navFollow = useRef(true), offCount = useRef(0), navHeading = useRef(0), firstFix = useRef(true), arrivedRef = useRef(false), rerouting = useRef(false), navAnim = useRef(0);
+  const navMode = useRef<Mode>("walk"), navFollow = useRef(true), offCount = useRef(0), navHeading = useRef(0), firstFix = useRef(true), arrivedRef = useRef(false), rerouting = useRef(false), navAnim = useRef(0);
   const wake = useRef<{ release: () => Promise<void> } | null>(null);
   const [travel, setTravel] = useState(false), [drawer, setDrawer] = useState(false), [campusMenu, setCampusMenu] = useState(false), [layerMenu, setLayerMenu] = useState(false);
   const [locOn, setLocOn] = useState(false), [locFix, setLocFix] = useState(false), [toast, setToast] = useState<string | null>(null), [zoomed, setZoomed] = useState(false), [dragY, setDragY] = useState<number | null>(null);
@@ -282,9 +283,14 @@ export default function Navigator() {
     m.fitBounds(b, { padding: isDesktop() ? { left: 460, top: 100, right: 100, bottom: 100 } : { top, bottom, left: 44, right: 44 }, maxZoom: 18, ...camera() });
   }
   function compute(dest: Poi, start: Start, active = 0) {
-    const rs = getRoutes(start, dest);
+    const rs = getRoutes(start, dest, modeRef.current);
     setDir({ dest, start, routes: rs, active, sq: "", sfocus: false, locating: false });
     show(rs, active);
+  }
+  function switchMode(m: Mode) {
+    if (modeRef.current === m) return; tap();
+    modeRef.current = m; setMode(m);
+    if (dir?.start) compute(dir.dest, dir.start);
   }
   function show(rs: RouteOption[], i: number) { setRouteData(rs[i].coordinates, rs.filter((_, k) => k !== i).map((r) => r.coordinates), true); fit(rs[i].coordinates); }
   function openDirections(dest: Poi) {
@@ -314,12 +320,13 @@ export default function Navigator() {
   function reroute(from: [number, number]) {
     const dest = navDest.current; if (!dest || rerouting.current) return; rerouting.current = true;
     const start: Start = { id: "gps", name: "Your location", lat: from[1], lng: from[0] };
-    const rs = getRoutes(start, dest);
+    const rs = getRoutes(start, dest, navMode.current);
     navRoute.current = prepare(rs[0].coordinates); setRouteData(rs[0].coordinates, []); offCount.current = 0;
     setDir((d) => (d ? { ...d, start, routes: rs, active: 0 } : d));
     setToast(rs[0].kind === "estimate" ? "You are away from the mapped paths, so this is a straight line to the destination." : "Route updated from where you are.");
     rerouting.current = false;
   }
+  const navPace = () => (navDest.current && navMode.current === "cab" ? CAB_M_PER_MIN : WALK_M_PER_MIN);
   function onNavFix(p: GeolocationPosition) {
     const r = navRoute.current, m = map.current; if (!r || !m || arrivedRef.current) return;
     const raw: [number, number] = [p.coords.longitude, p.coords.latitude], acc = p.coords.accuracy || 20;
@@ -327,7 +334,7 @@ export default function Navigator() {
     const shown: [number, number] = onRoute ? s.point : raw;
     const moving = typeof p.coords.heading === "number" && !Number.isNaN(p.coords.heading) && (p.coords.speed ?? 0) > 0.6;
     navHeading.current = firstFix.current ? s.bearing : smoothHeading(navHeading.current, moving ? p.coords.heading! : s.bearing);
-    const remain = onRoute ? s.remaining : s.remaining + s.offM, min = minutesLeft(remain);
+    const remain = onRoute ? s.remaining : s.remaining + s.offM, min = minutesLeft(remain, navPace());
     if (!onRoute) {
       offCount.current += firstFix.current ? 3 : 1; // the very first fix is judged at once, later ones need 3 in a row
       if (offCount.current >= 3 && acc <= 80) { firstFix.current = false; reroute(raw); }
@@ -352,9 +359,10 @@ export default function Navigator() {
     tap();
     if (watchId.current !== null) { navigator.geolocation.clearWatch(watchId.current); watchId.current = null; } // navigation does its own tracking
     meMarker.current?.remove(); meMarker.current = null; setLocOn(false); setLocFix(false);
-    const r = prepare(dir.routes[dir.active].coordinates);
+    const r = prepare(dir.routes[dir.active].coordinates), nm: Mode = dir.routes[dir.active].mode ?? "walk";
+    navMode.current = nm;
     navRoute.current = r; navDest.current = dir.dest; navFollow.current = true; offCount.current = 0; firstFix.current = true; arrivedRef.current = false; setFollowing(true);
-    setNav({ dest: dir.dest }); setNavInfo({ remain: r.total, minutes: minutesLeft(r.total), arrive: arriveClock(minutesLeft(r.total)), arrived: false, wait: true, off: false });
+    setNav({ dest: dir.dest, mode: nm }); const first = minutesLeft(r.total, nm === "cab" ? CAB_M_PER_MIN : WALK_M_PER_MIN); setNavInfo({ remain: r.total, minutes: first, arrive: arriveClock(first), arrived: false, wait: true, off: false });
     try { (navigator as unknown as { wakeLock?: { request: (t: string) => Promise<{ release: () => Promise<void> }> } }).wakeLock?.request("screen").then((l) => { wake.current = l; }).catch(() => {}); } catch { /* optional */ }
     navWatch.current = navigator.geolocation.watchPosition(onNavFix, (e) => {
       if (e.code === 1) { setToast("Allow location access to navigate."); exitNav(); }
@@ -419,10 +427,10 @@ export default function Navigator() {
       <div className="gm-top">
         {nav ? (
           <div className={`gm-navtop ${navInfo.arrived ? "done" : ""}`} role="status" aria-live="polite">
-            <Icon name={navInfo.arrived ? "place" : "navigate"} size={30} color="#fff" />
+            <Icon name={navInfo.arrived ? "place" : nav.mode === "cab" ? "car" : "walk"} size={30} color="#fff" />
             <div className="gm-navtxt">
               <small>{navInfo.arrived ? "You have arrived" : navInfo.wait ? "Finding your location…" : navInfo.off ? "Away from the path" : "Follow the blue line"}</small>
-              <b>{navInfo.arrived ? nav.dest.name : `Walk to ${nav.dest.name}`}</b>
+              <b>{navInfo.arrived ? nav.dest.name : `${nav.mode === "cab" ? "Ride" : "Walk"} to ${nav.dest.name}`}</b>
             </div>
             {!navInfo.arrived && !navInfo.wait && <span className="gm-navdist">{fmtDist(navInfo.remain)}</span>}
           </div>
@@ -457,7 +465,9 @@ export default function Navigator() {
               </div>
               <button className="gm-iconbtn" aria-label="Swap start and destination" onClick={swap}><Icon name="swap" /></button>
             </div>
-            <div className="gm-modes"><span className="on"><Icon name="walk" size={20} /> Walking</span></div>
+            <div className="gm-modes" role="tablist" aria-label="Travel mode">
+              {(["walk", "cab"] as Mode[]).map((m) => <button key={m} role="tab" aria-selected={mode === m} className={mode === m ? "on" : ""} onClick={() => switchMode(m)}><Icon name={m === "walk" ? "walk" : "car"} size={20} /> {m === "walk" ? "Walking" : "Cab"}</button>)}
+            </div>
             {dir.sfocus && (
               <div className="gm-drop inner" onMouseDown={(e) => e.preventDefault()}>
                 {row("me", <Icon name="locate" size={20} color="#1A73E8" />, "Your location", "Use GPS", () => { (document.activeElement as HTMLElement)?.blur(); setDir({ ...dir, locating: true, sfocus: false }); navigator.geolocation?.getCurrentPosition((p) => compute(dir.dest, { id: "gps", name: "Your location", lat: p.coords.latitude, lng: p.coords.longitude }), () => { setDir((d) => d && { ...d, locating: false }); setToast("Couldn't get your location, choose a starting place instead."); }, { enableHighAccuracy: true, timeout: 8000 }); })}
@@ -524,12 +534,12 @@ export default function Navigator() {
             {S.view === "dir" && sdir && (!sdir.routes.length ? <div className="gm-pad gm-empty">{sdir.locating ? "Finding your location…" : "Choose a starting point to see walking routes."}</div> : <>
               {sdir.routes.map((r, i) => (
                 <button key={i} className={`gm-route ${i === sdir.active ? "on" : ""}`} onClick={() => { setDir({ ...sdir, active: i }); show(sdir.routes, i); tap(); }}>
-                  <Icon name="walk" size={22} color="#5f6368" />
+                  <Icon name={r.mode === "cab" ? "car" : "walk"} size={22} color="#5f6368" />
                   <span className="gm-rinfo"><b>{r.walkMinutes} min</b> <small>({fmtDist(routeMeters(r.coordinates))})</small>
                     <span className="gm-rl">{r.label}{r.custom ? "" : r.traced ? " · traced from satellite" : " · straight-line estimate"}</span></span>
                 </button>))}
               <div className="gm-pad gm-startrow"><button className="gm-startbtn" onClick={startNav}><Icon name="navigate" size={20} color="#fff" /> Start</button></div>
-              <p className="gm-fine">{sdir.routes[0].traced || !sdir.routes[0].custom ? "Footpaths are traced from satellite images and not yet walked, allow a little extra time." : "Walked and recorded by the Unilorin Navigator team."}</p>
+              <p className="gm-fine">{sdir.routes[0].mode === "cab" ? "A cab stays on the roads, so you may be dropped at the nearest road and walk the last bit. Agree the fare with the driver before you get in." : sdir.routes[0].traced || !sdir.routes[0].custom ? "Footpaths are traced from satellite images and not yet walked, allow a little extra time." : "Walked and recorded by the Unilorin Navigator team."}</p>
             </>)}
 
             {S.view === "travel" && (
@@ -565,7 +575,7 @@ export default function Navigator() {
       {nav && (
         <div className="gm-navbar">
           <button className="gm-navx" onClick={() => (navInfo.arrived ? finishNav() : exitNav())}>{navInfo.arrived ? "Done" : "Exit"}</button>
-          <div className="gm-navstats">{navInfo.arrived ? <b>You are at {nav.dest.name}</b> : navInfo.wait ? <b>Finding your location…</b> : <><b>{navInfo.minutes} min</b><span>{fmtDist(navInfo.remain)} · arrive {navInfo.arrive}</span></>}</div>
+          <div className="gm-navstats">{navInfo.arrived ? <b>You are at {nav.dest.name}</b> : navInfo.wait ? <b>Finding your location…</b> : <><b><Icon name={nav.mode === "cab" ? "car" : "walk"} size={20} color="#188038" /> {navInfo.minutes} min</b><span>{fmtDist(navInfo.remain)} · arrive {navInfo.arrive}</span></>}</div>
         </div>)}
       {nav && !following && !navInfo.arrived && <button className="gm-recenter" onClick={recenter}><Icon name="navigate" size={18} color="#1a73e8" /> Re-center</button>}
       <Presence open={!!toast} ms={240}>{(closing) => (

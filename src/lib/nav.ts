@@ -61,4 +61,4 @@ export function smoothHeading(prev: number, next: number, amount = 0.35): number
 }
 
 export const WALK_M_PER_MIN = 80; // same pace the route cards use
-export const minutesLeft = (m: number) => Math.max(1, Math.ceil(m / WALK_M_PER_MIN));
+export const minutesLeft = (m: number, perMin = WALK_M_PER_MIN) => Math.max(1, Math.ceil(m / perMin));

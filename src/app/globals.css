@@ -280,3 +280,8 @@ button.gm-row:active{transform:scale(.985)}
 .gm-startrow{padding-top:4px;padding-bottom:0}
 .gm-startbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;border:0;border-radius:24px;background:#1a73e8;color:#fff;font-size:16px;font-weight:500;padding:13px 20px;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .12s,background-color .15s}
 .gm-startbtn:active{transform:scale(.97);background:#1765cc}
+
+/* travel mode chips (Walking / Cab) */
+.gm-modes button{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border:0;border-radius:16px;background:none;font-size:13px;font-weight:500;color:var(--sub);transition:background-color .15s,color .15s,transform .12s}
+.gm-modes button:active{transform:scale(.95)}.gm-modes button.on{background:var(--blue-bg);color:var(--chipon)}
+.gm-navstats b svg{vertical-align:-4px;margin-right:2px}
