@@ -32,10 +32,22 @@ export async function loadPois(): Promise<Poi[]> {
   return pois as Poi[];
 }
 
+/** Ranked search: exact name > name starts with > a word starts with > contains > alias > category; shorter names first on ties. */
 export function searchPois(all: Poi[], q: string): Poi[] {
   const s = q.trim().toLowerCase();
   if (!s) return [];
-  return all.filter((p) => p.name.toLowerCase().includes(s) || p.category.includes(s) || p.aliases?.some((a) => a.includes(s) || s.includes(a))).slice(0, 8);
+  const score = (p: Poi) => {
+    const n = p.name.toLowerCase();
+    if (n === s) return 0;
+    if (n.startsWith(s)) return 1;
+    if (n.split(/[^a-z0-9]+/).some((w) => w.startsWith(s))) return 2;
+    if (n.includes(s)) return 3;
+    if (p.aliases?.some((a) => a.includes(s) || s.includes(a))) return 4;
+    if (p.category.includes(s)) return 5;
+    return 9;
+  };
+  return all.map((p) => [score(p), p] as const).filter(([sc]) => sc < 9)
+    .sort((a, b) => a[0] - b[0] || a[1].name.length - b[1].name.length).map((x) => x[1]).slice(0, 8);
 }
 
 const R = 6371000;
@@ -50,7 +62,8 @@ let graph: Graph | null = null;
 const getGraph = () => (graph ??= buildGraph((paths as any).features));
 
 /** 1) hand-made routes in routes.json, 2) routes over the traced walking network, 3) straight-line estimate. */
-export function getRoutes(from: Poi, to: Poi): RouteOption[] {
+export interface LL { id: string; lat: number; lng: number }
+export function getRoutes(from: LL, to: LL): RouteOption[] {
   const out: RouteOption[] = [];
   for (const f of (routes as any).features) {
     const p = f.properties || {};
@@ -74,3 +87,5 @@ export function getRoutes(from: Poi, to: Poi): RouteOption[] {
   }
   return [{ label: "Direct line (estimate)", kind: "estimate", walkMinutes: Math.max(1, Math.round(distanceM(a, b) / 80)), coordinates: [a, b], custom: false }];
 }
+
+export const routeMeters = (c: [number, number][]) => c.slice(1).reduce((s, p, i) => s + distanceM(c[i], p), 0);

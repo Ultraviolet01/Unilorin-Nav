@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import FieldCollector from "@/components/FieldCollector";
+import "../field.css";
 
 export const metadata = { title: "Field collector · Unilorin Navigator" };
 
