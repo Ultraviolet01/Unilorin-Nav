@@ -4,6 +4,8 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { CATEGORY_META, type Poi, type RouteOption, getRoutes, loadPois, searchPois } from "@/lib/pois";
 import { getMapStyle } from "@/lib/mapStyle";
+import buildings from "../../data/buildings.json";
+import paths from "../../data/paths.json";
 
 const CENTER: [number, number] = [4.6727, 8.4805];
 
@@ -26,6 +28,15 @@ export default function Navigator() {
     const m = new maplibregl.Map({ container: el.current!, style: getMapStyle(), center: CENTER, zoom: 15 });
     m.addControl(new maplibregl.NavigationControl(), "bottom-right");
     m.addControl(new maplibregl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true }), "bottom-right");
+    m.on("load", () => {
+      // Building footprints (OpenStreetMap) and the traced walking network.
+      m.addSource("buildings", { type: "geojson", data: buildings as any });
+      m.addLayer({ id: "buildings-fill", type: "fill-extrusion", source: "buildings", minzoom: 15,
+        paint: { "fill-extrusion-color": "#7C3AED", "fill-extrusion-height": 6, "fill-extrusion-opacity": 0.55 } });
+      m.addSource("paths", { type: "geojson", data: paths as any });
+      m.addLayer({ id: "paths-line", type: "line", source: "paths", minzoom: 15,
+        paint: { "line-width": 2, "line-opacity": 0.8, "line-color": ["match", ["get", "kind"], "road", "#FFFFFF", "covered", "#FDE047", "#22D3EE"] } });
+    });
     map.current = m;
     return () => m.remove();
   }, []);
@@ -99,7 +110,7 @@ export default function Navigator() {
             <div className="routes">
               {routes.map((r, i) => (
                 <button key={i} className={i === active ? "on" : ""} onClick={() => { setActive(i); drawRoute(routes, i); }}>
-                  {r.label} · {r.walkMinutes} min{r.custom ? "" : " (estimate)"}
+                  {r.label} · {r.walkMinutes} min{r.custom ? "" : r.traced ? " (traced)" : " (estimate)"}
                 </button>
               ))}
             </div>

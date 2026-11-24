@@ -48,3 +48,20 @@ eateries, ATMs and the UITH entrance. Rows with `lat`/`lng` filled came from OSM
 `npm run sheet-to-pois`. (Note: it replaces `pois.json`, so keep the existing pins in your sheet too.)
 
 Coordinates are © OpenStreetMap contributors, ODbL (https://www.openstreetmap.org/copyright).
+
+## Footprints and walking network (`buildings.json`, `paths.json`)
+
+- `buildings.json` — 39 real building outlines for 29 pins, exported from OpenStreetMap (`npm run build-buildings`).
+  They line up with the satellite image. Rendered as 3D-extruded footprints on the map.
+- `paths.json` — a connected walking network of ~7.3 km (roads, footpaths/shortcuts, the covered walkway) for the
+  **central campus only** (Senate, library, lecture theatres, Arts, CIS, Social/Management blocks, SUB, market, clinics,
+  Lagos hostels). Built by `npm run trace-central`.
+  - Roads and footpaths were **traced by eye from Esri World Imagery** (zoom 18) and drawn back onto the imagery to check
+    them; expect **roughly 5-10 m** error and some guessed short connectors into building entrances.
+  - The covered walkway uses the OSM "Walkway" building outlines.
+  - Not covered: Atlantic Heights Hostel, the Mosque, the Stadium and UITH (routes there fall back to a straight-line
+    estimate), and anything outside the central area.
+  - Footpaths were chosen where a clear worn track is visible; **nobody has walked them yet**. Have a teammate walk the
+    shortcuts and fix `scripts/trace-central.mjs` (pixel coordinates are easy to nudge) or send a My Maps KML.
+- The app routes over this network (`src/lib/graph.ts`, Dijkstra) and offers "Shortest path" and "Mostly main roads"
+  when they differ. Hand-made entries in `routes.json` take priority.

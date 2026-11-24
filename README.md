@@ -22,5 +22,5 @@ See `data/README.md`. Seed pins are **placeholders** (`verified: false`) until r
 
 ## Offline
 `public/sw.js` caches the app shell, pins and photos; map tiles are cached as they are viewed.
-Directions: hand-traced routes in `data/routes.json` first; otherwise a straight-line estimate
+Directions: hand-made routes in `data/routes.json` first, then routes over the traced walking network (`data/paths.json`), then a straight-line estimate
 (Amazon Location route calculation is the next step).

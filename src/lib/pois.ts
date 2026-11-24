@@ -1,5 +1,7 @@
 import pois from "../../data/pois.json";
 import routes from "../../data/routes.json";
+import paths from "../../data/paths.json";
+import { buildGraph, shortest, snap, type Graph } from "./graph";
 
 export type Category = "faculty" | "hostel" | "eatery" | "atm" | "gate" | "health" | "admin" | "cbt" | "uith" | "lecture" | "sports" | "worship" | "market";
 export interface Poi {
@@ -7,7 +9,7 @@ export interface Poi {
   description: string; photo?: string; campus: "main" | "mini" | "uith"; verified?: boolean; source?: string;
 }
 export interface RouteOption {
-  label: string; kind: string; walkMinutes: number; coordinates: [number, number][]; custom: boolean;
+  label: string; kind: string; walkMinutes: number; coordinates: [number, number][]; custom: boolean; traced?: boolean;
 }
 
 export const CATEGORY_META: Record<Category, { icon: string; color: string }> = {
@@ -44,7 +46,10 @@ export function distanceM(a: [number, number], b: [number, number]) {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
-/** Hand-traced routes first; otherwise a straight-line estimate (replace with Amazon Location routing). */
+let graph: Graph | null = null;
+const getGraph = () => (graph ??= buildGraph((paths as any).features));
+
+/** 1) hand-made routes in routes.json, 2) routes over the traced walking network, 3) straight-line estimate. */
 export function getRoutes(from: Poi, to: Poi): RouteOption[] {
   const out: RouteOption[] = [];
   for (const f of (routes as any).features) {
@@ -55,6 +60,17 @@ export function getRoutes(from: Poi, to: Poi): RouteOption[] {
     out.push({ label: p.label ?? "Route", kind: p.kind ?? "main", walkMinutes: p.walkMinutes ?? 0, coordinates: coords, custom: true });
   }
   if (out.length) return out;
+
   const a: [number, number] = [from.lng, from.lat], b: [number, number] = [to.lng, to.lat];
+  const g = getGraph(), sa = snap(g, from.lng, from.lat), sb = snap(g, to.lng, to.lat);
+  if (sa !== null && sb !== null && sa !== sb) {
+    const wrap = (r: { coordinates: [number, number][]; meters: number }): RouteOption["coordinates"] => [a, ...r.coordinates, b];
+    const minutes = (m: number) => Math.max(1, Math.round((m + distanceM(a, g.nodes[sa]) + distanceM(b, g.nodes[sb])) / 80));
+    const fast = shortest(g, sa, sb), roads = shortest(g, sa, sb, { footpath: 4 });
+    if (fast) out.push({ label: "Shortest path", kind: "shortcut", walkMinutes: minutes(fast.meters), coordinates: wrap(fast), custom: false, traced: true });
+    if (roads && fast && Math.abs(roads.meters - fast.meters) > 5)
+      out.push({ label: "Mostly main roads", kind: "main", walkMinutes: minutes(roads.meters), coordinates: wrap(roads), custom: false, traced: true });
+    if (out.length) return out;
+  }
   return [{ label: "Direct line (estimate)", kind: "estimate", walkMinutes: Math.max(1, Math.round(distanceM(a, b) / 80)), coordinates: [a, b], custom: false }];
 }
