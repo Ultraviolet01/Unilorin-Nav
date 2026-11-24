@@ -18,6 +18,7 @@ const conv = (pts) => pts.map((p) => (typeof p === "string" ? pinLL(p) : p.ll ? 
 // Covered walkway spine (OSM building centrelines, north -> south), joined across the link blocks.
 const walkway = [[4.674059, 8.484637], [4.673958, 8.483418], [4.673805, 8.483245], [4.67375, 8.48254], [4.673815, 8.482342], [4.673755, 8.481693], [4.673613, 8.48151], [4.673557, 8.480864]];
 
+const circle = (cx, cy, r, n) => Array.from({ length: n + 1 }, (_, i) => [Math.round(cx + r * Math.cos((2 * Math.PI * i) / n)), Math.round(cy + r * Math.sin((2 * Math.PI * i) / n))]);
 const L = (kind, name, pts) => ({ kind, name, ll: conv(pts) });
 const lines = [
   // --- tarred roads ---
@@ -27,7 +28,12 @@ const lines = [
   L("road", "Arts road north branch", [[1593,1836],[1636,1736],[1664,1679],[1693,1643]]),
   L("road", "Central north-south road", [[1333,2138],[1331,2050],[1325,1980],[1322,1920],[1350,1893]]),
   L("road", "South ring road", [[921,2221],[975,2204],[1100,2183],[1225,2154],[1333,2138],[1400,2142],[1467,2167],[1533,2208],[1592,2258],[1625,2312],[1636,2350]]),
-  L("road", "West road", [[844,1300],[875,1550],[900,1862],[904,2050],[908,2175],[913,2242],[929,2325],[946,2408],[962,2483],[979,2550],[1017,2608],[1083,2667],[1167,2692],[1217,2733],[1258,2800]]),
+  L("road", "West road", [[1331,388],[1254,365],[1154,342],[1077,342],[1031,358],[1000,396],[977,450],[962,519],[962,596],[969,681],[975,742],[969,804],[965,865],[950,927],[923,973],[900,1019],[885,1050],[870,1130],[855,1215],[844,1300],[875,1550],[900,1862],[904,2050],[908,2175],[913,2242],[929,2325],[946,2408],[962,2483],[979,2550],[1017,2608],[1083,2667],[1167,2692],[1217,2733],[1258,2800],[1258,2842],[1317,2825],[1383,2812],[1450,2825],[1517,2837],[1583,2854],[1612,2874]]),
+  // --- south: roundabout, roads to the Mosque / Stadium area ---
+  L("road", "Roundabout", circle(1650, 2879, 46, 12)),
+  L("road", "Roundabout east road", [[1696,2879],[1717,2896],[1783,2908],[1850,2900],[1950,2896],[1975,2870],[1979,2850]]),
+  L("road", "Stadium road (south)", [[1640,2925],[1633,2950],[1625,3033],[1608,3133],[1583,3233],[1566,3290],[1545,3340],[1518,3386],[1473,3477],[1418,3559],[1364,3623],[1300,3677],[1227,3723],[1164,3768],[1109,3805]]),
+  L("road", "Stadium west road", [[1125,2958],[1067,3000],[1042,3092],[1017,3200],[1005,3250],[1018,3341],[1045,3423],[1082,3523],[1118,3595],[1127,3659],[1114,3741],[1105,3795]]),
   // --- covered walkway ---
   { kind: "covered", name: "Covered walkway", ll: walkway },
   // --- footpaths / shortcuts (traced from imagery) ---
@@ -62,6 +68,11 @@ const lines = [
   L("footpath", "Accounting/Finance access", [[1992,1440],"accounting-finance-block"]),
   L("footpath", "Geography access", ["accounting-finance-block","geography-block"]),
   L("footpath", "Political Science/Sociology to main road", [[1990,1500],"political-science-sociology-block",[2119,1519],[2181,1504],[2212,1519]]),
+  L("footpath", "Mosque to south ring road", ["university-central-mosque",[1418,2975],[1433,2917],[1467,2879],[1495,2854],[1517,2837]]),
+  L("footpath", "Stadium west road link (unverified)", [[1125,2958],[1180,2910],[1230,2870],[1258,2842]]),
+  L("footpath", "Stadium to road", ["university-stadium",[1010,3640],[1062,3632],[1112,3606]]),
+  L("footpath", "Main Auditorium south path", ["main-auditorium",[1860,2840],[1850,2900]]),
+  L("footpath", "Atlantic Heights Hostel to ring road", ["atlantic-heights-hostel",[1138,380],[1140,345]]),
   L("footpath", "SSLT access", ["sslt",[1990,1480]]),
   L("footpath", "Lecture Rooms access", ["lecture-rooms-lr",[1985,1540]]),
 ];
