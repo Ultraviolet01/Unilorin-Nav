@@ -1,0 +1,16 @@
+*{box-sizing:border-box}html,body{margin:0;height:100%;font-family:system-ui,sans-serif}
+.app,.map{position:fixed;inset:0}
+.top{position:absolute;top:12px;left:12px;right:12px;max-width:420px;z-index:2}
+.search{width:100%;padding:12px 14px;border-radius:12px;border:0;font-size:16px;box-shadow:0 2px 10px #0004}
+.results{list-style:none;margin:6px 0 0;padding:0;background:#fff;border-radius:12px;box-shadow:0 2px 10px #0004;overflow:hidden}
+.results button{width:100%;text-align:left;padding:12px 14px;border:0;background:none;font-size:15px}
+.tabs{display:flex;gap:6px;margin-top:8px}
+.tabs button{flex:1;padding:8px;border-radius:10px;border:0;background:#fff;font-weight:600}
+.tabs .on,.routes .on{background:#7C3AED;color:#fff}
+.pin{width:34px;height:34px;border-radius:50%;border:2px solid #fff;font-size:17px;box-shadow:0 2px 6px #0006;cursor:pointer}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-height:55vh;overflow:auto;background:#fff;border-radius:18px 18px 0 0;padding:16px;z-index:3;box-shadow:0 -4px 16px #0004}
+@media(min-width:700px){.sheet{left:12px;right:auto;width:380px;bottom:12px;border-radius:18px}}
+.sheet img{width:100%;border-radius:10px}.close{float:right;border:0;background:none;font-size:26px}
+.warn{color:#b45309;font-size:13px}
+.primary{width:100%;padding:12px;border:0;border-radius:10px;background:#7C3AED;color:#fff;font-weight:700;font-size:15px}
+.routes{display:grid;gap:6px;margin-top:10px}.routes button{padding:10px;border-radius:10px;border:1px solid #ddd;background:#fff}

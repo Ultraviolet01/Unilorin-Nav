@@ -1,0 +1,5 @@
+{
+  "name": "Unilorin Navigator", "short_name": "Unilorin Nav", "start_url": "/", "display": "standalone",
+  "background_color": "#ffffff", "theme_color": "#7C3AED",
+  "icons": [{ "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

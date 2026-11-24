@@ -1,0 +1,6 @@
+[
+  { "id": "main-gate", "name": "Main Gate", "category": "gate", "lat": 8.4799, "lng": 4.6742, "description": "PLACEHOLDER - replace with real coordinates from the field sheet.", "photo": "", "campus": "main", "verified": false },
+  { "id": "library", "name": "University Library", "category": "admin", "lat": 8.4812, "lng": 4.6730, "description": "PLACEHOLDER - replace with real coordinates from the field sheet.", "photo": "", "campus": "main", "verified": false },
+  { "id": "cbt-centre", "name": "CBT Centre", "category": "cbt", "lat": 8.4806, "lng": 4.6718, "description": "PLACEHOLDER - replace with real coordinates from the field sheet.", "photo": "", "campus": "main", "verified": false },
+  { "id": "uith-entrance", "name": "UITH Main Entrance", "category": "uith", "lat": 8.4700, "lng": 4.6200, "description": "PLACEHOLDER - replace with real coordinates from the field sheet.", "photo": "", "campus": "uith", "verified": false }
+]
