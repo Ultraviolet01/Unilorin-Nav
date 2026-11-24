@@ -369,5 +369,68 @@
     "campus": "uith",
     "verified": false,
     "source": "OpenStreetMap w400461278 (last edited 2022-01-25)"
+  },
+  {
+    "id": "new-park-main-gate",
+    "name": "New Park (Main Gate)",
+    "category": "transport",
+    "lat": 8.48003,
+    "lng": 4.6376,
+    "description": "Where cabs, buses and tricycles from town (Tanke and the rest of Ilorin) stop at the Main Gate, beside the Unilorin Zoo. Campus shuttles and buses start from here.",
+    "photo": "",
+    "campus": "main",
+    "verified": false,
+    "source": "Google Maps listing (Plus Code FJJQ+932) shared by the project team, 24 Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "new park",
+      "main gate",
+      "motor park",
+      "campus park",
+      "park",
+      "cab",
+      "taxi",
+      "korope",
+      "bus stop",
+      "transport"
+    ]
+  },
+  {
+    "id": "keke-park",
+    "name": "University Keke Park",
+    "category": "transport",
+    "lat": 8.48009,
+    "lng": 4.66756,
+    "description": "Loading area for campus tricycles (keke) and shuttle transfers, near the SUB and the student hostels.",
+    "photo": "",
+    "campus": "main",
+    "verified": false,
+    "source": "Google Maps listing (Plus Code FMJ9+PJJ) shared by the project team, 24 Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "keke",
+      "keke park",
+      "tricycle",
+      "napep",
+      "park"
+    ]
+  },
+  {
+    "id": "ps-bus-terminus",
+    "name": "Permanent Site Bus Terminus",
+    "category": "transport",
+    "lat": 8.47758,
+    "lng": 4.67011,
+    "description": "Inner-campus bus terminus at the Permanent Site, near the Main Auditorium and the Senate area.",
+    "photo": "",
+    "campus": "main",
+    "verified": false,
+    "source": "Google Maps listing (Plus Code FMHC+Q82) shared by the project team, 24 Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "bus terminus",
+      "bus stop",
+      "ps terminus",
+      "terminus",
+      "bus",
+      "shuttle"
+    ]
   }
 ]

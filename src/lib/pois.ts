@@ -26,7 +26,10 @@ export async function loadPois(): Promise<Poi[]> {
   if (api) {
     try {
       const res = await fetch(`${api}/pois`);
-      if (res.ok) { const d = await res.json(); if (Array.isArray(d) && d.length) return d as Poi[]; } // empty table -> use bundled data
+      if (res.ok) { const d = await res.json(); if (Array.isArray(d) && d.length) { // API wins; pins added to the bundle since the last upload still show
+        const have = new Set((d as Poi[]).map((x) => x.id));
+        return [...(d as Poi[]), ...(pois as Poi[]).filter((x) => !have.has(x.id))];
+      } } // empty table -> use bundled data
     } catch { /* offline: fall through to bundled data */ }
   }
   return pois as Poi[];
