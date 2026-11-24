@@ -78,7 +78,11 @@ export default function Navigator() {
 
   // ---------- camera: eased, slower for long hops (campus <-> UITH), instant if the user prefers reduced motion ----------
   function moveTo(opts: maplibregl.FlyToOptions, long = false) {
-    map.current?.flyTo({ ...opts, essential: true, duration: reduced() ? 0 : long ? 2200 : 1000, curve: long ? 1.6 : 1.42, easing: easeInOut });
+    // `padding` on flyTo is remembered by the camera and silently shrinks every later fitBounds (a 1 km route ended up at zoom 12),
+    // so turn it into a one-off `offset` that is not remembered.
+    const { padding, ...rest } = opts as maplibregl.FlyToOptions & { padding?: { top?: number; bottom?: number; left?: number; right?: number } };
+    const offset: [number, number] | undefined = padding ? [((padding.left ?? 0) - (padding.right ?? 0)) / 2, ((padding.top ?? 0) - (padding.bottom ?? 0)) / 2] : undefined;
+    map.current?.flyTo({ ...rest, ...(offset ? { offset } : {}), essential: true, duration: reduced() ? 0 : long ? 2200 : 1000, curve: long ? 1.6 : 1.42, easing: easeInOut });
   }
   const camera = () => ({ duration: reduced() ? 0 : 900, easing: easeInOut, essential: true });
 
@@ -133,6 +137,7 @@ export default function Navigator() {
     m.on("zoom", () => setZoomed(m.getZoom() >= 16));
     m.on("click", (e) => { if (!(e.originalEvent.target as HTMLElement).closest(".gm-poi")) { setLayerMenu(false); setCampusMenu(false); } });
     map.current = m;
+    if (location.search.includes("debug")) (window as unknown as { __map?: maplibregl.Map }).__map = m; // test hook, only with ?debug
     return () => m.remove();
   }, []);
   const baseTouched = useRef(false);
@@ -143,7 +148,7 @@ export default function Navigator() {
       awaiting.current = true;
       box?.classList.add("gm-fading");
       const clear = () => box?.classList.remove("gm-fading");
-      window.setTimeout(() => { m.setStyle(getMapStyle(base)); m.once("idle", clear); window.setTimeout(clear, 2500); }, reduced() ? 0 : 140);
+      window.setTimeout(() => { m.setStyle(getMapStyle(base), { diff: false }); m.once("idle", clear); /* diff:false => always a full reload, so style.load fires and the overlays (route, buildings) are re-added */ window.setTimeout(clear, 2500); }, reduced() ? 0 : 140);
     }
     if (skipSave.current) skipSave.current = false; else { try { localStorage.setItem("unilorin-base", base); } catch { /* ignore */ } }
   }, [base]);
@@ -262,7 +267,11 @@ export default function Navigator() {
   // ---------- directions ----------
   function fit(coords: [number, number][]) {
     const m = map.current; if (!m || !coords.length) return; const b = new maplibregl.LngLatBounds(); coords.forEach((c) => b.extend(c));
-    m.fitBounds(b, { padding: isDesktop() ? { left: 460, top: 100, right: 100, bottom: 100 } : { top: 170, bottom: 300, left: 50, right: 50 }, maxZoom: 18, ...camera() });
+    // keep the route clear of the top card (measured) and the bottom sheet, like Google does
+    const h = el.current?.clientHeight ?? 700, mapTop = el.current?.getBoundingClientRect().top ?? 0;
+    const bar = document.querySelector(".gm-dir")?.getBoundingClientRect();
+    const top = bar ? Math.max(120, bar.bottom - mapTop + 14) : 170, bottom = Math.min(340, Math.max(240, Math.round(h * 0.33) + 46)); /* sheet + the height of the destination pin */
+    m.fitBounds(b, { padding: isDesktop() ? { left: 460, top: 100, right: 100, bottom: 100 } : { top, bottom, left: 44, right: 44 }, maxZoom: 18, ...camera() });
   }
   function compute(dest: Poi, start: Start, active = 0) {
     const rs = getRoutes(start, dest);
