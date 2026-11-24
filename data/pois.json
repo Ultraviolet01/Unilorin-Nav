@@ -432,5 +432,23 @@
       "bus",
       "shuttle"
     ]
+  },
+  {
+    "id": "old-college-class-area",
+    "name": "Old College (Class Area), College of Health Sciences",
+    "category": "lecture",
+    "lat": 8.533,
+    "lng": 4.6483,
+    "description": "Class area of the Old College (College of Health Sciences). Not on the Main Campus: take a cab. Position is approximate (within about 150 m).",
+    "photo": "",
+    "campus": "uith",
+    "verified": false,
+    "source": "Google Maps listing 'Class Area, Old College, College of...' (user's dropped pin 8.53422, 4.64831 beside it; position from a second Google AI listing 8.5330, 4.6483), 24 Nov 2026; approximate, not yet checked on the ground",
+    "aliases": [
+      "old college",
+      "class area",
+      "college of health sciences",
+      "old college class area"
+    ]
   }
 ]
