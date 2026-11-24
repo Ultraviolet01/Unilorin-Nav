@@ -4,7 +4,7 @@ import routes from "../../data/routes.json";
 export type Category = "faculty" | "hostel" | "eatery" | "atm" | "gate" | "health" | "admin" | "cbt" | "uith";
 export interface Poi {
   id: string; name: string; category: Category; lat: number; lng: number;
-  description: string; photo?: string; campus: "main" | "mini" | "uith"; verified?: boolean;
+  description: string; photo?: string; campus: "main" | "mini" | "uith"; verified?: boolean; source?: string;
 }
 export interface RouteOption {
   label: string; kind: string; walkMinutes: number; coordinates: [number, number][]; custom: boolean;

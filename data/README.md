@@ -33,3 +33,13 @@
    Walk time is computed from the line length at 80 m/min.
 
 Then `npm run import-pois` pushes the pins to DynamoDB.
+
+## Where the current pins come from
+
+`pois.json` holds only pins with a published source; none is verified on the ground yet (`verified: false`).
+`faculty-checklist.csv` lists everything still to locate: the 16 faculty-level units (13 faculties plus the 3 under
+"Colleges" on unilorin.edu.ng/academics), key admin buildings, the park and the Mini-Campus eateries. Fill in `lat`/`lng`
+there, then run `npm run sheet-to-pois`.
+
+Some coordinates come from OpenStreetMap — © OpenStreetMap contributors, ODbL (https://www.openstreetmap.org/copyright).
+Department buildings, eateries, ATMs and the new park have no published coordinates anywhere we could reach.
