@@ -6,7 +6,9 @@ import { loadState, metersBetween, saveState, type FieldTrack } from "./fieldsto
 export type Sharing = "upload" | "local" | null;
 const CONSENT = "unilorin-walk-sharing-v1", OWNER = "unilorin-walk-owner-v1";
 const API = process.env.NEXT_PUBLIC_API_URL;
-export const CAN_UPLOAD = !!API;
+// Sharing is OFF unless the build says NEXT_PUBLIC_WALK_SHARING=on (set in Amplify only after the privacy review in docs/PRIVACY.md).
+// While off: walks are only kept on the phone, no consent pop-up is offered and nothing is sent. Deleting earlier shares still works.
+export const CAN_UPLOAD = !!API && process.env.NEXT_PUBLIC_WALK_SHARING === "on";
 
 export function getSharing(): Sharing {
   try { const s = JSON.parse(localStorage.getItem(CONSENT) ?? "null"); if (s?.v === 1 && (s.choice === "upload" || s.choice === "local")) return s.choice; } catch { /* none yet */ }

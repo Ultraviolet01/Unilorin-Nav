@@ -21,7 +21,8 @@ Other branches do not deploy. The four settings the build needs are stored in Am
 The app is a **static export**, so its Amplify platform must stay on *Web* (static), the server-rendered "Next.js (SSR)" mode fails with
 `Can't find required-server-files.json`.
 
-## Shared walks (opt-in)
+## Shared walks (opt-in) - currently OFF in the app
+The app only offers sharing when the build has `NEXT_PUBLIC_WALK_SHARING=on` (Amplify → Hosting → Environment variables, then redeploy). It is **off** until the privacy review in `docs/PRIVACY.md` is done; walks are then kept on the phone only. The backend below stays deployed but nothing in the app calls it.
 Students who tick **Save my walk** and choose **Share my walks** upload their GPS walks. The table holds a random code (made on the phone), the GPS points, time, length, kind and destination id. No name, phone or email. Rows delete themselves after 12 months (DynamoDB TTL on `expires`).
 - **This is the only public write path.** Protections: strict validation (area around Ilorin, size, formats), route throttles (5 req/s for `/walks`, 2 for `/walks/forget`), at most 200 walks per code, 150 KB body limit, CORS limited to the site, and a Lambda that can only write that one table.
 - **Anyone could still send junk.** Treat shared walks as untrusted: export them, look at them on a map, and only then merge (never automatically).

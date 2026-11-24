@@ -1,5 +1,7 @@
 # Walk sharing: what we collect and why
 
+> **Status: sharing is switched OFF in the app** (build flag `NEXT_PUBLIC_WALK_SHARING`, unset). Walks are kept on the phone only. Turn it on only after the points at the bottom are settled.
+
 Plain-language note that matches the pop-up in the app. Keep the two in step.
 
 **Why:** the map's footpaths are traced from satellite images and have not been walked. Real walks let the team add the paths people actually use.

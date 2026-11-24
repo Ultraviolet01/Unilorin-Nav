@@ -588,8 +588,8 @@ export default function Navigator() {
                     <span className="gm-rl">{r.label}{r.custom ? "" : r.traced ? " · traced from satellite" : " · straight-line estimate"}</span></span>
                 </button>))}
               <div className="gm-pad gm-startrow">
-                <label className="gm-rec"><input type="checkbox" checked={saveWalk} onChange={(e) => onSaveToggle(e.target.checked)} /><span><b>Save my walk to improve the map</b><small>{sharing === "upload" ? "Shared with the map team. Your name is not included." : sharing === "local" ? "Kept on this phone only." : "You will be asked how it is used."}</small></span></label>
-                {sharing && CAN_UPLOAD && <button className="gm-rec-link" onClick={() => { setConfirmDel(false); setConsentOpen(true); }}>Change walk sharing</button>}
+                <label className="gm-rec"><input type="checkbox" checked={saveWalk} onChange={(e) => onSaveToggle(e.target.checked)} /><span><b>Save my walk to improve the map</b><small>{sharing === "upload" ? (CAN_UPLOAD ? "Shared with the map team. Your name is not included." : "Sharing is paused. Kept on this phone.") : sharing === "local" ? "Kept on this phone only." : "You will be asked how it is used."}</small></span></label>
+                {sharing && (CAN_UPLOAD || sharing === "upload") && <button className="gm-rec-link" onClick={() => { setConfirmDel(false); setConsentOpen(true); }}>Change walk sharing</button>}
                 <button className="gm-startbtn" onClick={startNav}><Icon name="navigate" size={20} color="#fff" /> Start</button></div>
               <p className="gm-fine">{sdir.routes[0].mode === "cab" ? "A cab stays on the roads, so you may be dropped at the nearest road and walk the last bit. Agree the fare with the driver before you get in." : sdir.routes[0].traced || !sdir.routes[0].custom ? "Footpaths are traced from satellite images and not yet walked, allow a little extra time." : "Walked and recorded by the Unilorin Navigator team."}</p>
             </>)}
@@ -641,12 +641,12 @@ export default function Navigator() {
             ) : (
               <div className="gm-dact">
                 {sharing !== "upload" && <button className="gm-dbtn primary" autoFocus onClick={() => chooseSharing("upload")}>Share my walks</button>}
-                {sharing === "upload" && <button className="gm-dbtn primary" autoFocus onClick={() => setConsentOpen(false)}>Keep sharing</button>}
+                {sharing === "upload" && CAN_UPLOAD && <button className="gm-dbtn primary" autoFocus onClick={() => setConsentOpen(false)}>Keep sharing</button>}
                 {sharing !== "local" && sharing !== "upload" && <button className="gm-dbtn secondary" onClick={() => chooseSharing("local")}>Keep on my phone only</button>}
                 {sharing === "upload" && <button className="gm-dbtn danger" onClick={() => setConfirmDel(true)}>Stop sharing and delete my walks</button>}
-                {sharing === "local" && <button className="gm-dbtn secondary" onClick={() => chooseSharing("upload")}>Share my walks</button>}
+                {sharing === "local" && CAN_UPLOAD && <button className="gm-dbtn secondary" onClick={() => chooseSharing("upload")}>Share my walks</button>}
                 {sharing === null && <button className="gm-dbtn ghost" onClick={() => setConsentOpen(false)}>Not now</button>}
-                {sharing !== null && sharing !== "upload" && <button className="gm-dbtn ghost" onClick={() => setConsentOpen(false)}>Close</button>}
+                {sharing !== null && (sharing !== "upload" || !CAN_UPLOAD) && <button className="gm-dbtn ghost" onClick={() => setConsentOpen(false)}>Close</button>}
               </div>
             )}
           </div>
