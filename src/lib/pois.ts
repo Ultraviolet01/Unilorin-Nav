@@ -6,7 +6,7 @@ import { buildGraph, shortest, snap, type Graph } from "./graph";
 export type Category = "faculty" | "hostel" | "eatery" | "atm" | "gate" | "health" | "admin" | "cbt" | "uith" | "lecture" | "sports" | "worship" | "market" | "transport";
 export interface Poi {
   id: string; name: string; category: Category; lat: number; lng: number;
-  description: string; photo?: string; campus: "main" | "mini" | "uith"; verified?: boolean; source?: string;
+  description: string; photo?: string; campus: "main" | "mini" | "uith"; verified?: boolean; source?: string; aliases?: string[];
 }
 export interface RouteOption {
   label: string; kind: string; walkMinutes: number; coordinates: [number, number][]; custom: boolean; traced?: boolean;
@@ -35,7 +35,7 @@ export async function loadPois(): Promise<Poi[]> {
 export function searchPois(all: Poi[], q: string): Poi[] {
   const s = q.trim().toLowerCase();
   if (!s) return [];
-  return all.filter((p) => p.name.toLowerCase().includes(s) || p.category.includes(s)).slice(0, 8);
+  return all.filter((p) => p.name.toLowerCase().includes(s) || p.category.includes(s) || p.aliases?.some((a) => a.includes(s) || s.includes(a))).slice(0, 8);
 }
 
 const R = 6371000;

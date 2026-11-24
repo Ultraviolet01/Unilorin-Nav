@@ -9,7 +9,14 @@
     "photo": "",
     "campus": "main",
     "verified": false,
-    "source": "OpenStreetMap w1079418826 (last edited 2022-07-18)"
+    "source": "OpenStreetMap w1079418826 (last edited 2022-07-18)",
+    "aliases": [
+      "senatorial building",
+      "senate",
+      "vice chancellor's office",
+      "registry",
+      "bursary"
+    ]
   },
   {
     "id": "main-auditorium",
@@ -21,7 +28,11 @@
     "photo": "",
     "campus": "main",
     "verified": false,
-    "source": "OpenStreetMap w1079418827 (last edited 2022-07-18)"
+    "source": "OpenStreetMap w1079418827 (last edited 2022-07-18)",
+    "aliases": [
+      "auditorium",
+      "university auditorium"
+    ]
   },
   {
     "id": "university-library",
@@ -173,7 +184,7 @@
     "category": "lecture",
     "lat": 8.48629,
     "lng": 4.674012,
-    "description": "Labelled 'SSLT' in OpenStreetMap, beside the Social Sciences department blocks.",
+    "description": "Faculty of Social Sciences Lecture Theatre (per OpenStreetMap), beside the Social Sciences department blocks.",
     "photo": "",
     "campus": "main",
     "verified": false,

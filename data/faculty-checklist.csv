@@ -36,10 +36,11 @@ UNILORIN bus terminus (Tanke),transport,8.48159,4.60541,From OpenStreetMap (node
 Station Road bus station (Tanke) A,transport,8.48071,4.58937,From OpenStreetMap (node 13048283366) - confirm,,main
 Station Road bus station (Tanke) B,transport,8.48159,4.58951,From OpenStreetMap (node 13048283367) - confirm,,main
 Offa Garage Motor Park,transport,8.45487,4.58054,From OpenStreetMap (node 13087548538) - confirm,,main
-LH (lecture hall - confirm),lecture,8.486683,4.673946,From OpenStreetMap (way 1078465243) labelled just 'LH' - confirm what it is and its full name,,main
+Social Sciences Lecture Hall (LH),lecture,8.486683,4.673946,From OpenStreetMap (way 1078465243): labelled 'LH' and described as the Faculty of Social Sciences Lecture Hall - confirm,,main
 Amphitheater (near LT 4),lecture,8.484706,4.67412,From OpenStreetMap (way 1078532847) - confirm,,main
 Blocks 1-10 (lecture-theatre cluster),lecture,,,OpenStreetMap labels ten buildings 'Block 1' to 'Block 10' along the covered walkway (around 8.4807-8.4846 N 4.6739-4.6747 E) - identify what each is and record each entrance,,main
 Faculty lecture theatres and halls (add each by name),lecture,,,Every faculty has its own lecture venues - list each one with its name and entrance,,main
 Old College lecture halls and classrooms,lecture,,,Where College of Health Sciences students receive lectures - find names and entrances,,uith
 New College - Lecture Hall A,lecture,,,Reported by the team: the New College has two lecture halls (A and B) - record the entrance,,uith
 New College - Lecture Hall B,lecture,,,Reported by the team: the New College has two lecture halls (A and B) - record the entrance,,uith
+Multipurpose Hall (MPH),admin,,,Used for Senate luncheons and ceremonies (university bulletins) - location not published; find it and record the entrance,,main

@@ -30,5 +30,16 @@
     "place": "the New College (Lecture Hall A and Lecture Hall B)",
     "prefix": false,
     "note": "Reported by the project team; exact location not yet mapped - confirm on the field trip."
+  },
+  {
+    "terms": [
+      "mph",
+      "multipurpose hall",
+      "multi-purpose hall",
+      "multi purpose hall"
+    ],
+    "campus": "main",
+    "place": "the Multipurpose Hall (MPH)",
+    "note": "Known venue (university bulletins) but its location is not published anywhere we could reach; assumed to be on the main campus - confirm on the field trip."
   }
 ]
