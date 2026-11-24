@@ -166,18 +166,6 @@ Everything is deployed and documented in **`docs/AWS-SETUP.md`** (addresses, how
 - `docs/coordinates-to-confirm.pdf` and `docs/photo-checklist.pdf` list what to confirm and photograph.
 - **Walked paths:** tick "Save my walk" and use **Start**; the walk is saved on the phone. Merge it with `scripts/walks-to-paths.mjs` (see `data/README.md`).
 
-## Interface
-
-Familiar Google-Maps patterns so students need no learning curve: a floating search pill with a menu, category chips with a campus switcher, a layers button, a "my location" button, a draggable bottom sheet on phones (a side panel on desktop), a directions card with Walking and Cab, and a snackbar. It is original code and styling; no Google branding, logos or assets are used.
-
-- Selecting a place highlights its real building footprint. Add `?paths` to the URL to overlay the traced walking network (development).
-- If the Amazon map fails to load, the app falls back to the standard map with a message and keeps your saved choice.
-- Deep links: `/#p=<pin-id>` opens a place, `/#uith` opens the UITH & Colleges tab.
-
-## Motion
-
-Plain CSS plus a few lines of code, no animation library, so the app stays small on slow connections. The shared curves are at the top of the motion section in `src/app/globals.css` (`--ease-out`, `--spring`, `--ease-in`). Pins pop in with a stagger, the place card follows your finger with a rubber-band and flick, the camera glides, the route line draws itself, and menus animate in and out. If the phone's "reduce motion" setting is on, animation collapses to about 0 ms.
-
 ## Privacy
 
 Location data is personal data. Recorded walks stay on the phone. An opt-in upload to the team exists (consent pop-up, random code instead of a name, first 40 m of each walk cut, 12-month expiry, delete-from-the-app), but it is **switched off** until the points in `docs/PRIVACY.md` are settled with the university or a lawyer.
@@ -191,5 +179,4 @@ Location data is personal data. Recorded walks stay on the phone. An opt-in uplo
 ## Known limits
 
 - Pins are unverified and paths are traced, not walked. Expect some wrong turns until the field trip is done.
-- Directions are a line to follow ("Follow the blue line"); there are no spoken or written turn instructions yet.
 - Amazon Location route calculation is the possible next step for road routing beyond the campus.
