@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { type Category, type LL, type Mode, type Poi, type RouteOption, CAB_M_PER_MIN, WALK_M_PER_MIN, getRoutes, loadPois, routeMeters, searchPois } from "@/lib/pois";
+import { loadState, saveState, metersBetween } from "@/lib/fieldstore";
 import { minutesLeft, prepare, remainingLine, smoothHeading, snapToRoute, type Prepared } from "@/lib/nav";
 import { HAS_AWS_MAP, getMapStyle, type Base } from "@/lib/mapStyle";
 import { CAT, CHIP_ORDER, Icon, iconPath } from "./gm/icons";
@@ -68,11 +69,15 @@ export default function Navigator() {
   const [dir, setDir] = useState<Dir | null>(null);
   // live navigation ("Start"): follow the walker's GPS dot along the chosen route
   const [mode, setMode] = useState<Mode>("walk"), modeRef = useRef<Mode>("walk");
+  useEffect(() => { try { setSaveWalk(localStorage.getItem("unilorin-save-walk") === "1"); } catch { /* ignore */ } }, []);
   const [nav, setNav] = useState<{ dest: Poi; mode: Mode } | null>(null), [following, setFollowing] = useState(true);
   const [navInfo, setNavInfo] = useState({ remain: 0, minutes: 0, arrive: "", arrived: false, wait: true, off: false });
   const navWatch = useRef<number | null>(null), navMarker = useRef<maplibregl.Marker | null>(null), navRoute = useRef<Prepared | null>(null), navDest = useRef<Poi | null>(null);
   const navMode = useRef<Mode>("walk"), navFollow = useRef(true), offCount = useRef(0), navHeading = useRef(0), firstFix = useRef(true), arrivedRef = useRef(false), rerouting = useRef(false), navAnim = useRef(0);
   const wake = useRef<{ release: () => Promise<void> } | null>(null);
+  // "Save my walk": GPS fixes kept on this phone (never uploaded) in the same store the /field collector exports
+  const [saveWalk, setSaveWalk] = useState(false), [recording, setRecording] = useState(false);
+  const recPts = useRef<[number, number][]>([]), recId = useRef(""), recLabel = useRef(""), recKind = useRef("footpath"), recDest = useRef("");
   const [travel, setTravel] = useState(false), [drawer, setDrawer] = useState(false), [campusMenu, setCampusMenu] = useState(false), [layerMenu, setLayerMenu] = useState(false);
   const [locOn, setLocOn] = useState(false), [locFix, setLocFix] = useState(false), [toast, setToast] = useState<string | null>(null), [zoomed, setZoomed] = useState(false), [dragY, setDragY] = useState<number | null>(null);
 
@@ -327,9 +332,23 @@ export default function Navigator() {
     rerouting.current = false;
   }
   const navPace = () => (navDest.current && navMode.current === "cab" ? CAB_M_PER_MIN : WALK_M_PER_MIN);
+  function flushWalk(final: boolean): boolean {
+    const pts = recPts.current; if (!recId.current) return false;
+    const meters = Math.round(pts.slice(1).reduce((t, c, i) => t + metersBetween(pts[i], c), 0));
+    if (pts.length < 5 || meters < 30) return false; // too short to be a useful path
+    const st = loadState(), track = { id: recId.current, from: "walk", to: recDest.current, label: recLabel.current, kind: recKind.current, points: pts.map((c) => [+c[0].toFixed(6), +c[1].toFixed(6)] as [number, number]), ts: new Date().toISOString(), meters };
+    const i = st.tracks.findIndex((t) => t.id === track.id); if (i >= 0) st.tracks[i] = track; else st.tracks.push(track);
+    saveState(st);
+    if (final) { recId.current = ""; recPts.current = []; }
+    return true;
+  }
   function onNavFix(p: GeolocationPosition) {
     const r = navRoute.current, m = map.current; if (!r || !m || arrivedRef.current) return;
     const raw: [number, number] = [p.coords.longitude, p.coords.latitude], acc = p.coords.accuracy || 20;
+    if (recId.current && acc <= 25) { // keep good fixes only, at least 4 m apart
+      const last = recPts.current[recPts.current.length - 1];
+      if (!last || metersBetween(last, raw) >= 4) { recPts.current.push(raw); if (recPts.current.length % 10 === 0) flushWalk(false); } // autosave so a closed tab loses little
+    }
     const s = snapToRoute(r, raw), onRoute = s.offM <= Math.max(35, acc);
     const shown: [number, number] = onRoute ? s.point : raw;
     const moving = typeof p.coords.heading === "number" && !Number.isNaN(p.coords.heading) && (p.coords.speed ?? 0) > 0.6;
@@ -347,6 +366,7 @@ export default function Navigator() {
   }
   function arrive() {
     arrivedRef.current = true;
+    if (flushWalk(true)) { setRecording(false); setToast("Your walk is saved on this phone. Open the Field page to share it with the team."); }
     if (navWatch.current !== null) { navigator.geolocation.clearWatch(navWatch.current); navWatch.current = null; }
     const d = navDest.current; if (d) moveNavDot([d.lng, d.lat], navHeading.current);
     setRouteData(null, []); setNavInfo((i) => ({ ...i, remain: 0, minutes: 0, arrived: true, wait: false, off: false }));
@@ -359,6 +379,8 @@ export default function Navigator() {
     tap();
     if (watchId.current !== null) { navigator.geolocation.clearWatch(watchId.current); watchId.current = null; } // navigation does its own tracking
     meMarker.current?.remove(); meMarker.current = null; setLocOn(false); setLocFix(false);
+    recPts.current = []; recId.current = saveWalk ? String(Date.now()) : ""; recDest.current = dir.dest.id; recKind.current = (dir.routes[dir.active].mode ?? "walk") === "cab" ? "road" : "footpath";
+    recLabel.current = `Walked: ${dir.start?.name ?? "Your location"} to ${dir.dest.name}`; setRecording(saveWalk);
     const r = prepare(dir.routes[dir.active].coordinates), nm: Mode = dir.routes[dir.active].mode ?? "walk";
     navMode.current = nm;
     navRoute.current = r; navDest.current = dir.dest; navFollow.current = true; offCount.current = 0; firstFix.current = true; arrivedRef.current = false; setFollowing(true);
@@ -370,6 +392,8 @@ export default function Navigator() {
     }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 60000 });
   }
   function exitNav(toOverview = true) {
+    if (flushWalk(true)) setToast("Your walk is saved on this phone. Open the Field page to share it with the team.");
+    recId.current = ""; setRecording(false);
     if (navWatch.current !== null) { navigator.geolocation.clearWatch(navWatch.current); navWatch.current = null; }
     cancelAnimationFrame(navAnim.current); navMarker.current?.remove(); navMarker.current = null;
     wake.current?.release().catch(() => {}); wake.current = null;
@@ -538,7 +562,9 @@ export default function Navigator() {
                   <span className="gm-rinfo"><b>{r.walkMinutes} min</b> <small>({fmtDist(routeMeters(r.coordinates))})</small>
                     <span className="gm-rl">{r.label}{r.custom ? "" : r.traced ? " · traced from satellite" : " · straight-line estimate"}</span></span>
                 </button>))}
-              <div className="gm-pad gm-startrow"><button className="gm-startbtn" onClick={startNav}><Icon name="navigate" size={20} color="#fff" /> Start</button></div>
+              <div className="gm-pad gm-startrow">
+                <label className="gm-rec"><input type="checkbox" checked={saveWalk} onChange={(e) => { setSaveWalk(e.target.checked); try { localStorage.setItem("unilorin-save-walk", e.target.checked ? "1" : "0"); } catch { /* ignore */ } }} /><span><b>Save my walk to improve the map</b><small>Kept on this phone. Nothing is uploaded until you share it.</small></span></label>
+                <button className="gm-startbtn" onClick={startNav}><Icon name="navigate" size={20} color="#fff" /> Start</button></div>
               <p className="gm-fine">{sdir.routes[0].mode === "cab" ? "A cab stays on the roads, so you may be dropped at the nearest road and walk the last bit. Agree the fare with the driver before you get in." : sdir.routes[0].traced || !sdir.routes[0].custom ? "Footpaths are traced from satellite images and not yet walked, allow a little extra time." : "Walked and recorded by the Unilorin Navigator team."}</p>
             </>)}
 
@@ -575,7 +601,7 @@ export default function Navigator() {
       {nav && (
         <div className="gm-navbar">
           <button className="gm-navx" onClick={() => (navInfo.arrived ? finishNav() : exitNav())}>{navInfo.arrived ? "Done" : "Exit"}</button>
-          <div className="gm-navstats">{navInfo.arrived ? <b>You are at {nav.dest.name}</b> : navInfo.wait ? <b>Finding your location…</b> : <><b><Icon name={nav.mode === "cab" ? "car" : "walk"} size={20} color="#188038" /> {navInfo.minutes} min</b><span>{fmtDist(navInfo.remain)} · arrive {navInfo.arrive}</span></>}</div>
+          <div className="gm-navstats">{navInfo.arrived ? <b>You are at {nav.dest.name}</b> : navInfo.wait ? <b>Finding your location…</b> : <><b><Icon name={nav.mode === "cab" ? "car" : "walk"} size={20} color="#188038" /> {navInfo.minutes} min</b><span>{fmtDist(navInfo.remain)} · arrive {navInfo.arrive}</span>{recording && <small className="gm-rec-on">Saving this walk</small>}</>}</div>
         </div>)}
       {nav && !following && !navInfo.arrived && <button className="gm-recenter" onClick={recenter}><Icon name="navigate" size={18} color="#1a73e8" /> Re-center</button>}
       <Presence open={!!toast} ms={240}>{(closing) => (

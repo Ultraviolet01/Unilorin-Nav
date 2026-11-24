@@ -1,5 +1,5 @@
 // Minimal offline service worker: app shell + pins + photos cached; map tiles cached as seen.
-const CACHE = "unilorin-nav-v6";
+const CACHE = "unilorin-nav-v7";
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(["/", "/field/", "/manifest.json", "/basemap.json"]))); self.skipWaiting(); });
 self.addEventListener("activate", (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener("fetch", (e) => {

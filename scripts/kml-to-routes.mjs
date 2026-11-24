@@ -17,6 +17,7 @@ for (const pm of readFileSync(input, "utf8").match(/<Placemark[\s\S]*?<\/Placema
   const name = unxml(pm.match(/<name>([\s\S]*?)<\/name>/)?.[1] ?? "");
   const [pair, label = "Route", kind = "main"] = name.split("|").map((s) => s.trim());
   const [from, to] = (pair ?? "").split(">").map((s) => s.trim());
+  if (from === "walk") continue; // recorded walks are raw paths: use scripts/walks-to-paths.mjs
   if (!ids.has(from) || !ids.has(to)) { errors.push(`"${name}": from/to must be existing poi ids (got "${from}", "${to}")`); continue; }
   const coordinates = coordsRaw.trim().split(/\s+/).map((c) => c.split(",").slice(0, 2).map(Number));
   const metres = coordinates.slice(1).reduce((s, c, i) => s + distanceM(coordinates[i], c), 0);
