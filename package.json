@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "import-pois": "node scripts/import-pois.mjs"
+    "import-pois": "node scripts/import-pois.mjs",
+    "sheet-to-pois": "node scripts/sheet-to-pois.mjs",
+    "kml-to-routes": "node scripts/kml-to-routes.mjs"
   },
   "dependencies": {
     "maplibre-gl": "^4.7.1",
