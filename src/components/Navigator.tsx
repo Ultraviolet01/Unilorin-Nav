@@ -129,7 +129,7 @@ export default function Navigator() {
   const ql = q.trim().toLowerCase();
   const results = searchPois(tabPois, q);
   const results2 = searchPois(otherPois, q); // matches on the other tab
-  const matchAlias = (campus: string, same: boolean) => ql.length >= 3 ? elsewhere.find((e) => (e.campus === campus) === same && e.terms.some((t) => t.includes(ql) || ql.includes(t))) : undefined;
+  const matchAlias = (campus: string, same: boolean) => ql.length >= 3 ? elsewhere.find((e) => (e.campus === campus) === same && e.terms.some((t) => ql.includes(t) || (e.prefix !== false && t.includes(ql)))) : undefined;
   const aliasElsewhere = matchAlias(tab, false); // "that lives on the other tab"
   const aliasHere = matchAlias(tab, true);
   const travelHit = tab === "main" && !aliasElsewhere && ql.length >= 3 && transport.keywords.some((k) => k.includes(ql) || ql.includes(k));
