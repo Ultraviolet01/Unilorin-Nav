@@ -242,3 +242,8 @@ button.gm-row:active{transform:scale(.985)}
   *,*::before,*::after{animation-duration:.01ms!important;animation-delay:0ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
   .gm-me::after{display:none}
 }
+
+/* layer picker: 2x2 grid now that there can be four views */
+.gm-layers{display:grid;grid-template-columns:repeat(2,auto);gap:6px 10px}
+.gm-swatch.aws{background:linear-gradient(135deg,#eef3f8 0 28%,#fff 28% 36%,#e3ecf4 36% 70%,#bcd8f2 70%);position:relative}
+.gm-swatch.aws::after{content:"AWS";position:absolute;right:3px;bottom:3px;font:700 9px/1 Roboto,sans-serif;letter-spacing:.04em;color:#fff;background:#232f3e;border-radius:3px;padding:2px 4px}

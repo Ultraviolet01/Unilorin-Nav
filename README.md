@@ -35,11 +35,12 @@ a draggable bottom sheet for place details on phones (a left side panel on deskt
 cards, a snackbar for messages, and a coloured-icon POI pin set with a red selected pin. Everything is original code/styling —
 no Google branding, logos or assets are used. Icons are Material Icons (Apache-2.0).
 
-- **Three views** (layers button or menu; the choice is remembered): **Satellite** (default, Esri World Imagery), **Map**
-  (Amazon Location when `NEXT_PUBLIC_LOCATION_*` is set, otherwise a Google-style street map drawn from the bundled
-  OpenStreetMap extract `public/basemap.json` — roads with names, area/place labels, coloured POI dots, campus + UITH/Oja Oba
-  area, works offline) and **Dark** (dark map + dark interface). Rebuild the extract with `node scripts/build-basemap.mjs`.
-  Label fonts are bundled in `public/fonts` (Open Sans, Apache-2.0).
+- **Four views** (layers button or menu; the choice is remembered): **Map** — our detailed OpenStreetMap map (roads with
+  names, building outlines, area/place labels, coloured POI dots; campus + UITH/Oja Oba area; works offline), **Dark** — the same
+  map in a dark theme with a dark interface, **Satellite** (default; Esri World Imagery) and **Amazon Map** — Amazon Location
+  Service (HERE data), shown only when `NEXT_PUBLIC_LOCATION_*` is set (it is on the deployed site). If the Amazon map fails to
+  load, the app falls back to the standard map with a message and keeps the saved choice. Rebuild the OpenStreetMap extract with
+  `node scripts/build-basemap.mjs`. Label fonts are bundled in `public/fonts` (Open Sans, Apache-2.0).
 - Selecting a place highlights its real building footprint. Add `?paths` to the URL to overlay the traced walking network (dev only).
 - Search ranks exact/prefix matches first, understands aliases, and looks across both campuses (see `data/README.md`).
 - Deep links: `/#p=<pin-id>` opens a place, `/#uith` opens the UITH & Colleges tab. "Share" on a place copies/shares that link.

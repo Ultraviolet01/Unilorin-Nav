@@ -1,6 +1,6 @@
 import type { LayerSpecification, StyleSpecification } from "maplibre-gl";
 
-export type Base = "map" | "dark" | "sat";
+export type Base = "map" | "dark" | "sat" | "aws";
 const region = process.env.NEXT_PUBLIC_AWS_REGION ?? "eu-north-1";
 const awsName = process.env.NEXT_PUBLIC_LOCATION_MAP_NAME;
 const awsKey = process.env.NEXT_PUBLIC_LOCATION_API_KEY;
@@ -56,9 +56,12 @@ const sat: StyleSpecification = {
   layers: [{ id: "base", type: "raster", source: "base" }],
 };
 
-/** "map"/"dark": Amazon Location when configured (map only), otherwise the bundled OSM vector map. "sat": Esri satellite imagery. */
+/**
+ * "map"/"dark": the detailed street map drawn from the bundled OpenStreetMap extract (offline-friendly).
+ * "sat": Esri satellite imagery.  "aws": Amazon Location Service (HERE data) — only when configured, else falls back to "map".
+ */
 export function getMapStyle(base: Base): string | StyleSpecification {
   if (base === "sat") return sat;
-  if (base === "map" && HAS_AWS_MAP) return `https://maps.geo.${region}.amazonaws.com/maps/v0/maps/${awsName}/style-descriptor?key=${awsKey}`;
+  if (base === "aws" && HAS_AWS_MAP) return `https://maps.geo.${region}.amazonaws.com/maps/v0/maps/${awsName}/style-descriptor?key=${awsKey}`;
   return local(base === "dark");
 }

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { type Category, type LL, type Poi, type RouteOption, getRoutes, loadPois, routeMeters, searchPois } from "@/lib/pois";
-import { getMapStyle, type Base } from "@/lib/mapStyle";
+import { HAS_AWS_MAP, getMapStyle, type Base } from "@/lib/mapStyle";
 import { CAT, CHIP_ORDER, Icon, iconPath } from "./gm/icons";
 import buildings from "../../data/buildings.json";
 import paths from "../../data/paths.json";
@@ -15,7 +15,8 @@ const CAMPUS: Record<Tab, { label: string; center: [number, number]; zoom: numbe
   main: { label: "Main Campus", center: [4.6727, 8.4805], zoom: 15.3, hint: "Search Unilorin" },
   uith: { label: "UITH & Colleges", center: [4.5326, 8.4797], zoom: 17, hint: "Search UITH & Colleges" },
 };
-const readBase = (): Base => { try { const b = localStorage.getItem("unilorin-base"); if (b === "map" || b === "dark" || b === "sat") return b; } catch { /* ignore */ } return "sat"; };
+const BASES: [Base, string, string][] = [["map", "Map", "Map view"], ["dark", "Dark", "Dark map"], ["sat", "Satellite", "Satellite view"], ...(HAS_AWS_MAP ? [["aws", "Amazon Map", "Amazon Map (AWS)"] as [Base, string, string]] : [])];
+const readBase = (): Base => { try { const b = localStorage.getItem("unilorin-base") as Base | null; if (b && BASES.some((x) => x[0] === b)) return b; } catch { /* ignore */ } return "sat"; };
 const EMPTY: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 const lines = (cs: [number, number][][]): GeoJSON.FeatureCollection => ({ type: "FeatureCollection", features: cs.map((c) => ({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: c } })) });
 const fmtDist = (m: number) => (m < 1000 ? `${Math.max(10, Math.round(m / 10) * 10)} m` : `${(m / 1000).toFixed(1)} km`);
@@ -51,6 +52,8 @@ export default function Navigator() {
   const watchId = useRef<number | null>(null);
   const routeRef = useRef<{ main: GeoJSON.FeatureCollection; alt: GeoJSON.FeatureCollection }>({ main: EMPTY, alt: EMPTY });
   const pending = useRef<Poi | null>(null), switchRef = useRef<(t: Tab) => void>(() => {});
+  const skipSave = useRef(false); // a fallback (e.g. Amazon outage) must not overwrite the user's saved choice
+  const awaiting = useRef(true); // true from 'asked for a style' until it has loaded
   const raf = useRef(0), markerEls = useRef<Map<string, HTMLElement>>(new Map());
   const poisRef = useRef<Poi[]>([]), pickRef = useRef<(p: Poi) => void>(() => {});
 
@@ -124,7 +127,9 @@ export default function Navigator() {
     const initial = readBase(); baseRef.current = initial; setBase(initial);
     const m = new maplibregl.Map({ container: el.current!, style: getMapStyle(initial), center: CAMPUS.main.center, zoom: CAMPUS.main.zoom, attributionControl: false, pitchWithRotate: false, dragRotate: false });
     m.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
-    m.on("style.load", () => { addOverlays(m); setReady(true); });
+    m.on("style.load", () => { awaiting.current = false; addOverlays(m); setReady(true); });
+    // If the Amazon map can't be loaded (outage, bad key, offline) fall back to the standard map instead of leaving a blank screen.
+    m.on("error", () => { if (awaiting.current && baseRef.current === "aws") { awaiting.current = false; setToast("Amazon Map isn't available right now — showing the standard map instead."); skipSave.current = true; setBase("map"); } });
     m.on("zoom", () => setZoomed(m.getZoom() >= 16));
     m.on("click", (e) => { if (!(e.originalEvent.target as HTMLElement).closest(".gm-poi")) { setLayerMenu(false); setCampusMenu(false); } });
     map.current = m;
@@ -134,12 +139,13 @@ export default function Navigator() {
   useEffect(() => {
     if (!baseTouched.current) { baseTouched.current = true; return; } // first run = the value we just read, nothing to apply
     const m = map.current, box = el.current;
-    if (m && ready) {
+    if (m) { // not gated on `ready`: even if the first style failed, switching views must still work
+      awaiting.current = true;
       box?.classList.add("gm-fading");
       const clear = () => box?.classList.remove("gm-fading");
       window.setTimeout(() => { m.setStyle(getMapStyle(base)); m.once("idle", clear); window.setTimeout(clear, 2500); }, reduced() ? 0 : 140);
     }
-    try { localStorage.setItem("unilorin-base", base); } catch { /* ignore */ }
+    if (skipSave.current) skipSave.current = false; else { try { localStorage.setItem("unilorin-base", base); } catch { /* ignore */ } }
   }, [base]);
 
   // ---------- load data + deep links ----------
@@ -376,7 +382,7 @@ export default function Navigator() {
           <button className="gm-sqbtn" aria-label="Map layers" onClick={() => { setLayerMenu((v) => !v); setCampusMenu(false); tap(); }}><Icon name="layers" /></button>
           <Presence open={layerMenu} ms={150}>{(closing) => (
             <div className={`gm-layers ${closing ? "out" : ""}`}>
-              {([["map", "Map"], ["dark", "Dark"], ["sat", "Satellite"]] as [Base, string][]).map(([b, l]) => <button key={b} className={base === b ? "on" : ""} onClick={() => { setBase(b); setLayerMenu(false); tap(); }}><span className={`gm-swatch ${b}`} />{l}</button>)}
+              {BASES.map(([b, l]) => <button key={b} className={base === b ? "on" : ""} onClick={() => { setBase(b); setLayerMenu(false); tap(); }}><span className={`gm-swatch ${b}`} />{l}</button>)}
             </div>)}</Presence>
         </div>)}
       {!(view === "place" && full) && !dir && <button className={`gm-fab ${locOn ? "on" : ""} ${locOn && !locFix ? "seek" : ""} ${sheetUp ? "up" : ""}`} aria-label="Show my location" aria-pressed={locOn} onClick={toggleLocate}><Icon name="locate" /></button>}
@@ -445,7 +451,7 @@ export default function Navigator() {
           <div className="gm-brand"><span className="gm-logo"><Icon name="place" size={22} color="#fff" /></span><div><b>Unilorin Navigator</b><br /><small>Find your way around campus</small></div></div>
           {(Object.keys(CAMPUS) as Tab[]).map((t) => <button key={t} className={`gm-item ${t === tab ? "on" : ""}`} onClick={() => { setDrawer(false); switchTab(t); }}><Icon name={t === "main" ? "school" : "hospital"} size={22} />{CAMPUS[t].label}</button>)}
           <hr />
-          {([["map", "Map view"], ["dark", "Dark map"], ["sat", "Satellite view"]] as [Base, string][]).map(([b, l]) => <button key={b} className={`gm-item ${base === b ? "on" : ""}`} onClick={() => { setBase(b); setDrawer(false); }}><Icon name="layers" size={22} />{l}</button>)}
+          {BASES.map(([b, , l]) => <button key={b} className={`gm-item ${base === b ? "on" : ""}`} onClick={() => { setBase(b); setDrawer(false); }}><Icon name="layers" size={22} />{l}</button>)}
           <button className="gm-item" onClick={openTravel}><Icon name="taxi" size={22} />Getting to UITH &amp; the colleges</button>
           <a className="gm-item" href="/field/"><Icon name="photo" size={22} />Field collector (team)</a>
           <p className="gm-fine">Map data © OpenStreetMap contributors. Icons: Material Icons (Apache-2.0).</p>

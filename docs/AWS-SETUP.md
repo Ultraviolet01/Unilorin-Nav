@@ -7,11 +7,11 @@
 | Website | AWS Amplify Hosting (manual deployment of the static export) | https://main.d1mrgjwajo268n.amplifyapp.com — app `d1mrgjwajo268n`, branch `main` |
 | Pins API | API Gateway HTTP API → Lambda → DynamoDB | `https://i9h6rn4lwh.execute-api.eu-north-1.amazonaws.com/pois` |
 | Pins database | DynamoDB (on-demand) | table from stack output `TableName` (30 pins) |
-| "Map" view | Amazon Location Service (HERE Explore style) + key restricted to map tiles, this map, this site | map `unilorin-nav-map`, key `unilorin-nav-web-key` |
+| "Amazon Map" view | Amazon Location Service (HERE Explore style) + key restricted to map tiles, this map, this site | map `unilorin-nav-map`, key `unilorin-nav-web-key` |
 | Everything above except the website | one CloudFormation stack | `unilorin-nav` (`infra/template.yaml`) |
 
 Not used: S3 (photos are served by Amplify from `public/photos`), Cognito (no logins).
-The Satellite and Dark views, and the offline basemap, do not use AWS.
+The Map (OpenStreetMap), Dark and Satellite views do not use AWS; "Amazon Map" is the AWS-powered view and is offered only on builds that have the Amazon Location settings.
 
 ## What protects it
 - **API:** CORS allows only the website's address; rate limit 25 req/s (burst 50); the Lambda can only `Scan` its own table. No login — the data is public and read-only.
