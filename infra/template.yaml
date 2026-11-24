@@ -137,6 +137,7 @@ Resources:
     Properties:
       KeyName: !Sub "${AWS::StackName}-web-key"
       NoExpiry: true
+      ForceUpdate: true   # required by AWS to change the allowed sites of a key that was used in the last 7 days
       Restrictions:
         AllowActions: ["geo:GetMap*"]
         AllowResources: [!GetAtt LocationMap.Arn]
