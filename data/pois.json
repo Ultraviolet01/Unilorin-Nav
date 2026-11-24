@@ -450,5 +450,41 @@
       "college of health sciences",
       "old college class area"
     ]
+  },
+  {
+    "id": "new-college-chs",
+    "name": "New College, College of Health Sciences",
+    "category": "uith",
+    "lat": 8.5117233,
+    "lng": 4.6506893,
+    "description": "The New College of the College of Health Sciences (Faculty of Basic Medical Sciences classes). Not on the Main Campus: take a cab. Position approximate, from Google Maps.",
+    "photo": "",
+    "campus": "uith",
+    "verified": false,
+    "source": "Google Maps listing 'College Of Health Sciences, University Of Ilorin' (3.9 stars), shown on the map screenshot; coordinates from a Google AI answer that matches the listing, 24 Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "new college",
+      "college of health sciences",
+      "chs",
+      "basic medical sciences",
+      "physiology"
+    ]
+  },
+  {
+    "id": "new-college-lecture-hall-a",
+    "name": "New College Lecture Hall A",
+    "category": "lecture",
+    "lat": 8.5113662,
+    "lng": 4.6490612,
+    "description": "Lecture Hall A at the New College (about 170 m west of the college entrance on the same axis, per Google). Position approximate.",
+    "photo": "",
+    "campus": "uith",
+    "verified": false,
+    "source": "Coordinates from a Google AI answer (not seen on a map listing), 24 Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "lecture hall a",
+      "new college lecture hall",
+      "lecture hall"
+    ]
   }
 ]
