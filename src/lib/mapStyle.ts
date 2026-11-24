@@ -19,7 +19,7 @@ const round = { "line-cap": "round", "line-join": "round" } as const;
 const FONT = ["Open Sans Regular"];
 const byClass = (m: Record<string, string>, fallback: string) => ["match", ["get", "c"], ...Object.entries(m).flat(), fallback] as any;
 
-/** Google-like street map drawn from the bundled OpenStreetMap extract (public/basemap.json) — no tiles, works offline. */
+/** Google-like street map drawn from the bundled OpenStreetMap extract (public/basemap.json), no tiles, works offline. */
 function local(dark: boolean): StyleSpecification {
   const P = dark ? DARK : LIGHT;
   const road = (id: string, cls: string, color: string, width: any): LayerSpecification => ({ id, type: "line", source: "osm", filter: ["all", k("road"), c(cls)], layout: round, paint: { "line-color": color, "line-width": width } });
@@ -58,7 +58,7 @@ const sat: StyleSpecification = {
 
 /**
  * "map"/"dark": the detailed street map drawn from the bundled OpenStreetMap extract (offline-friendly).
- * "sat": Esri satellite imagery.  "aws": Amazon Location Service (HERE data) — only when configured, else falls back to "map".
+ * "sat": Esri satellite imagery.  "aws": Amazon Location Service (HERE data), only when configured, else falls back to "map".
  */
 export function getMapStyle(base: Base): string | StyleSpecification {
   if (base === "sat") return sat;

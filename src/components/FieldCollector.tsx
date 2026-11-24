@@ -49,7 +49,7 @@ export default function FieldCollector({ csv }: { csv: string }) {
 
   async function useGps() {
     setBusy(true); setMsg("Getting GPS… stand still at the entrance for ~10 seconds");
-    try { const f = await bestFix((a) => setMsg(`Reading GPS… accuracy ±${Math.round(a)} m`)); setGps(f); setMsg(f.acc > 25 ? `Got a fix but only ±${Math.round(f.acc)} m — move to open sky and try again.` : `Good fix: ±${Math.round(f.acc)} m`); }
+    try { const f = await bestFix((a) => setMsg(`Reading GPS… accuracy ±${Math.round(a)} m`)); setGps(f); setMsg(f.acc > 25 ? `Got a fix but only ±${Math.round(f.acc)} m, move to open sky and try again.` : `Good fix: ±${Math.round(f.acc)} m`); }
     catch (e: any) { setMsg(e.message); }
     setBusy(false);
   }
@@ -70,7 +70,7 @@ export default function FieldCollector({ csv }: { csv: string }) {
     setSt((s) => ({ ...s, records: { ...s.records, [key]: { key, name, category: custom.category, campus: custom.campus, lat: 0, lng: 0, acc: 0, note: "", ts: "", hasPhoto: false, custom: true } } }));
     setCustom({ ...custom, name: "" }); setSel(key);
   }
-  // custom items with no GPS yet are placeholders (lat/lng 0) — don't count or export them
+  // custom items with no GPS yet are placeholders (lat/lng 0), don't count or export them
   const real = Object.values(st.records).filter((r) => r.lat !== 0 || r.lng !== 0);
 
   function startRec() {
@@ -85,7 +85,7 @@ export default function FieldCollector({ csv }: { csv: string }) {
   function stopRec() {
     if (watch.current !== null) navigator.geolocation.clearWatch(watch.current); watch.current = null;
     if (rec && rec.pts.length >= 2) setSt((s) => ({ ...s, tracks: [...s.tracks, { id: String(Date.now()), ...pf, label: pf.label || "Route", points: rec.pts, ts: new Date().toISOString(), meters: Math.round(rec.meters) } as FieldTrack] }));
-    else setMsg("Path too short — walk a bit further before stopping.");
+    else setMsg("Path too short, walk a bit further before stopping.");
     setRec(null);
   }
 
@@ -100,7 +100,7 @@ export default function FieldCollector({ csv }: { csv: string }) {
     if (st.tracks.length) files.push(new File([tracksKml()], "footpaths.kml", { type: "application/vnd.google-earth.kml+xml" }));
     const nav = navigator as any;
     if (nav.canShare?.({ files })) { try { await nav.share({ files, title: "Unilorin field data" }); } catch { /* cancelled */ } }
-    else setMsg("Sharing files isn't supported here — use the download buttons instead.");
+    else setMsg("Sharing files isn't supported here, use the download buttons instead.");
   }
   async function downloadPhotos() { for (const r of real.filter((r) => r.hasPhoto)) { const b = await getPhoto(r.key); if (b) { download(`${r.key}.jpg`, b); await new Promise((x) => setTimeout(x, 400)); } } }
   async function wipe() { if (!confirm("Delete ALL data collected on this phone? Export first!")) return; await clearPhotos(); setSt((s) => ({ ...s, records: {}, tracks: [] })); }
@@ -131,7 +131,7 @@ export default function FieldCollector({ csv }: { csv: string }) {
 
       {tab === "places" && item && (<section className="fc-card">
         <button className="fc-link" onClick={() => setSel(null)}>← back to list</button>
-        <h2>{item.name}</h2><p className="fc-sub">{item.category} · {item.campus}{item.hint ? ` — ${item.hint}` : ""}</p>
+        <h2>{item.name}</h2><p className="fc-sub">{item.category} · {item.campus}{item.hint ? `, ${item.hint}` : ""}</p>
         <button className="fc-btn" disabled={busy} onClick={useGps}>📍 Use my GPS</button>
         {gps && <p>Lat {gps.lat.toFixed(6)}, Lng {gps.lng.toFixed(6)} (±{Math.round(gps.acc)} m)
           {item.current && <><br />Current pin is {Math.round(metersBetween([gps.lng, gps.lat], [item.current.lng, item.current.lat]))} m from here</>}</p>}
@@ -149,7 +149,7 @@ export default function FieldCollector({ csv }: { csv: string }) {
         <select className="fc-in" value={pf.kind} onChange={(e) => setPf({ ...pf, kind: e.target.value })}><option value="shortcut">shortcut</option><option value="main">main road</option><option value="shaded">shaded</option></select>
         {!rec ? <button className="fc-btn go" onClick={startRec}>▶ Start recording</button> : <><p>Recording… {rec.pts.length} points · {Math.round(rec.meters)} m · GPS ±{Math.round(rec.acc)} m</p><button className="fc-btn stop" onClick={stopRec}>■ Stop and save</button></>}
         <ul className="fc-list">{st.tracks.map((t) => <li key={t.id}><span>{t.from} → {t.to} · {t.label} · {t.meters} m <button className="fc-link" onClick={() => setSt({ ...st, tracks: st.tracks.filter((x) => x.id !== t.id) })}>delete</button></span></li>)}</ul>
-        <p className="fc-sub">Only pins already in the app can be start/end points — add new places first and re-run later.</p>
+        <p className="fc-sub">Only pins already in the app can be start/end points, add new places first and re-run later.</p>
       </section>)}
 
       {tab === "export" && (<section className="fc-card">

@@ -1,6 +1,6 @@
 // Usage: node scripts/sheet-to-pois.mjs <sheet.csv> [out=data/pois.json]
 // Export the Google Sheet via File → Download → CSV (or the /field collector's places.csv). Validates every row and refuses to write if any row is bad.
-// Add --merge to keep existing pins and only add/replace the ones in the CSV (matched by id) — use this for field exports.
+// Add --merge to keep existing pins and only add/replace the ones in the CSV (matched by id), use this for field exports.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { parseCsv, slug, inIlorin } from "./lib.mjs";
 
@@ -18,7 +18,7 @@ parseCsv(readFileSync(input, "utf8")).forEach((r, i) => {
   if (lat.includes(",") && !lng) [lat, lng] = lat.split(",").map((s) => s.trim());
   lat = parseFloat(lat); lng = parseFloat(lng);
   if (Number.isNaN(lat) || Number.isNaN(lng)) return bad("lat/lng missing or not numbers");
-  if (!inIlorin(lat, lng)) bad(`(${lat}, ${lng}) is outside Ilorin — lat/lng swapped or mistyped?`);
+  if (!inIlorin(lat, lng)) bad(`(${lat}, ${lng}) is outside Ilorin, lat/lng swapped or mistyped?`);
   const category = r.category.toLowerCase();
   if (!CATS.includes(category)) bad(`category "${r.category}" must be one of ${CATS.join(", ")}`);
   const campus = (r.campus || (category === "uith" ? "uith" : "main")).toLowerCase();

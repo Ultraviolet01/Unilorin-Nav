@@ -111,7 +111,7 @@ button.gm-row:hover{background:var(--hover)}.gm-row.static{cursor:default}
 .gm-swatch.dark{background:linear-gradient(135deg,#1d2944 0 30%,#4c6ba8 30% 38%,#18213a 38% 70%,#0d2a4a 70%)}
 
 /* =====================================================================
-   MOTION SYSTEM — one set of curves/speeds so everything feels related.
+   MOTION SYSTEM, one set of curves/speeds so everything feels related.
    ease-out: things arriving · spring: small playful overshoot · ease-in: things leaving
    ===================================================================== */
 :root{--ease-out:cubic-bezier(.2,.8,.2,1);--spring:cubic-bezier(.34,1.56,.64,1);--ease-in:cubic-bezier(.4,0,1,1)}
@@ -247,3 +247,16 @@ button.gm-row:active{transform:scale(.985)}
 .gm-layers{display:grid;grid-template-columns:repeat(2,auto);gap:6px 10px}
 .gm-swatch.aws{background:linear-gradient(135deg,#eef3f8 0 28%,#fff 28% 36%,#e3ecf4 36% 70%,#bcd8f2 70%);position:relative}
 .gm-swatch.aws::after{content:"AWS";position:absolute;right:3px;bottom:3px;font:700 9px/1 Roboto,sans-serif;letter-spacing:.04em;color:#fff;background:#232f3e;border-radius:3px;padding:2px 4px}
+
+/* ---- phone fixes: the card must never hide under the browser toolbar or lose its close button ---- */
+.gm-grip{position:sticky;top:0;z-index:3;background:var(--sheet);border-radius:16px 16px 0 0}
+.gm-grip .gm-x{position:absolute}
+.gm-sheet.full{max-height:min(78vh,640px)}
+@supports (height:1dvh){.gm-sheet.full{max-height:min(78dvh,640px)}}
+.gm-sheet::after{content:"";display:block;height:env(safe-area-inset-bottom)}
+@media (pointer:coarse){.gm-sheet.full::after{height:calc(72px + env(safe-area-inset-bottom))}} /* room to scroll the last lines above Safari's floating toolbar */
+.gm-steps{list-style:none;counter-reset:step;margin:10px 0 6px;padding:0}
+.gm-steps li{counter-increment:step;position:relative;padding:2px 0 14px 40px;font-size:15px;line-height:22px}
+.gm-steps li::before{content:counter(step);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:14px;font-weight:500}
+.gm-steps li:not(:last-child)::after{content:"";position:absolute;left:13px;top:30px;bottom:2px;width:2px;background:var(--line)}
+@media (min-width:900px){.gm-grip{height:0;background:none}.gm-sheet.full::after{height:24px}}

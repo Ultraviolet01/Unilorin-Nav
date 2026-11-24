@@ -1,6 +1,6 @@
 // Builds data/paths.json (walkable network for the central campus).
-// Roads and footpaths were traced by eye from Esri World Imagery at zoom 18 (tile origin below) — approximate, ~5-10 m.
-// The covered walkway spine uses OSM building outlines ("Walkway") — OSM data © OpenStreetMap contributors, ODbL.
+// Roads and footpaths were traced by eye from Esri World Imagery at zoom 18 (tile origin below), approximate, ~5-10 m.
+// The covered walkway spine uses OSM building outlines ("Walkway"), OSM data © OpenStreetMap contributors, ODbL.
 // Pixel coordinates are in a stitched mosaic whose top-left tile is (X0, Y0) at zoom Z. A string entry is a pin id.
 // Usage: node scripts/trace-central.mjs
 import { readFileSync, writeFileSync } from "node:fs";

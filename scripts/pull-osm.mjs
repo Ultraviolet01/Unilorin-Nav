@@ -1,4 +1,4 @@
-// Usage: node scripts/pull-osm.mjs   — lists every NAMED OpenStreetMap feature inside the Unilorin campus boundary,
+// Usage: node scripts/pull-osm.mjs  , lists every NAMED OpenStreetMap feature inside the Unilorin campus boundary,
 // with centre point and last-edit date, so you can see what changed since data/pois.json was built.
 // Uses the official OSM API (be gentle: ~9 requests). Data © OpenStreetMap contributors, ODbL.
 const API = "https://api.openstreetmap.org/api/0.6", H = { "User-Agent": "unilorin-navigator-data-script" };

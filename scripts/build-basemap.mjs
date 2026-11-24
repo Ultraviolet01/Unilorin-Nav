@@ -1,4 +1,4 @@
-// Builds public/basemap.json — a vector basemap (roads with names, buildings, water, green areas, place names, named POIs)
+// Builds public/basemap.json, a vector basemap (roads with names, buildings, water, green areas, place names, named POIs)
 // from OpenStreetMap, used for the app's "Map"/"Dark" views when no Amazon Location map is configured. Works offline.
 // Covers the Main Campus and the UITH / Oja Oba area. Data © OpenStreetMap contributors, ODbL.
 // Usage: node scripts/build-basemap.mjs   (several dozen requests to the OSM API; takes a few minutes)
@@ -23,7 +23,7 @@ for (const box of BOXES) for (let lng = box[0]; lng < box[2]; lng += 0.02) for (
 const cls = { trunk: "major", primary: "major", secondary: "major", tertiary: "major", trunk_link: "major", primary_link: "major", secondary_link: "major", tertiary_link: "major",
   residential: "minor", unclassified: "minor", living_street: "minor", service: "service", track: "service", path: "path", footway: "path", pedestrian: "path", cycleway: "path" };
 const r5 = (p) => [+p.lon.toFixed(5), +p.lat.toFixed(5)];
-// OSM names from address imports are messy ("Oja Tuntun, Oko Erin, Nigeria", plus-codes like "FJHH+V7Q") — keep only a clean first part.
+// OSM names from address imports are messy ("Oja Tuntun, Oko Erin, Nigeria", plus-codes like "FJHH+V7Q"), keep only a clean first part.
 const clean = (s) => { if (!s) return undefined; const n = s.split(",")[0].trim(); return n.length < 2 || /^[A-Z0-9]{4}\+[A-Z0-9]{2,}/.test(n) ? undefined : n.slice(0, 40); };
 const inBox = (p) => BOXES.some((b) => p.lon > b[0] && p.lon < b[2] && p.lat > b[1] && p.lat < b[3]);
 const features = [{ type: "Feature", properties: { k: "campus", n: "University of Ilorin" }, geometry: { type: "Polygon", coordinates: [ring.map((p) => [+p[0].toFixed(6), +p[1].toFixed(6)])] } }];
@@ -34,7 +34,7 @@ for (const w of ways.values()) {
   const pts = (w.nodes ?? []).map((i) => nodes.get(i)).filter(Boolean); if (pts.length < 2 || !pts.some(inBox)) continue;
   const closed = pts.length > 3 && w.nodes[0] === w.nodes.at(-1), coords = pts.map(r5), name = clean(t.name);
   if (t.highway && cls[t.highway]) add("road", { c: cls[t.highway], ...(name && cls[t.highway] !== "path" ? { n: name } : {}) }, { type: "LineString", coordinates: coords });
-  else if (t.building && closed) { if (pts.some((p) => p.lon > BOXES[0][0] && p.lon < BOXES[0][2] && p.lat > BOXES[0][1] && p.lat < BOXES[0][3])) add("building", {}, { type: "Polygon", coordinates: [coords] }); } // footprints for the campus only (the city has ~23k — too heavy)
+  else if (t.building && closed) { if (pts.some((p) => p.lon > BOXES[0][0] && p.lon < BOXES[0][2] && p.lat > BOXES[0][1] && p.lat < BOXES[0][3])) add("building", {}, { type: "Polygon", coordinates: [coords] }); } // footprints for the campus only (the city has ~23k, too heavy)
   else if (t.natural === "water" && closed) add("water", name ? { n: name } : {}, { type: "Polygon", coordinates: [coords] });
   else if (closed && (["forest", "grass", "meadow", "recreation_ground", "village_green", "cemetery"].includes(t.landuse) || ["wood", "scrub", "grassland"].includes(t.natural) || ["park", "pitch", "garden", "playground", "stadium"].includes(t.leisure)))
     add("green", { c: t.leisure === "pitch" || t.leisure === "stadium" ? "pitch" : "veg", ...(name ? { n: name } : {}) }, { type: "Polygon", coordinates: [coords] });

@@ -38,6 +38,6 @@ export function bestFix(onUpdate: (acc: number) => void, ms = 10000): Promise<{ 
       (p) => { if (!best || p.coords.accuracy < best.acc) { best = { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy }; onUpdate(best.acc); } },
       (e) => { navigator.geolocation.clearWatch(id); clearTimeout(t); rej(new Error(e.message || "Could not get GPS")); },
       { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
-    const t = setTimeout(() => { navigator.geolocation.clearWatch(id); best ? res(best) : rej(new Error("No GPS fix — go outside / enable location")); }, ms);
+    const t = setTimeout(() => { navigator.geolocation.clearWatch(id); best ? res(best) : rej(new Error("No GPS fix, go outside / enable location")); }, ms);
   });
 }

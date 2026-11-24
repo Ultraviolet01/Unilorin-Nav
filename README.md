@@ -16,10 +16,10 @@ Without AWS keys the map falls back to free Esri satellite tiles and pins come f
 See `data/README.md`. Seed pins are **placeholders** (`verified: false`) until real coordinates are collected.
 
 ## AWS
-See **`docs/AWS-SETUP.md`** — the app is **deployed on AWS (eu-north-1), auto-published from the `main` branch**: Amplify (site), API Gateway + Lambda + DynamoDB (pins), Amazon Location (map). It has the addresses, how to redeploy, and how to remove everything. Summary:
+See **`docs/AWS-SETUP.md`**, the app is **deployed on AWS (eu-north-1), auto-published from the `main` branch**: Amplify (site), API Gateway + Lambda + DynamoDB (pins), Amazon Location (map). It has the addresses, how to redeploy, and how to remove everything. Summary:
 
-- `lambda/getPOIs` — Scan DynamoDB table `UnilorinPOIs` (partition key `id`), behind API Gateway `GET /pois`.
-- `npm run import-pois` — bulk-load `data/pois.json` into DynamoDB.
+- `lambda/getPOIs`, Scan DynamoDB table `UnilorinPOIs` (partition key `id`), behind API Gateway `GET /pois`.
+- `npm run import-pois`, bulk-load `data/pois.json` into DynamoDB.
 - Set `NEXT_PUBLIC_API_URL` to the API Gateway invoke URL.
 
 ## Offline
@@ -32,12 +32,12 @@ Directions: hand-made routes in `data/routes.json` first, then routes over the t
 The UI follows the familiar Google Maps patterns so students need no learning curve:
 floating search pill with a menu button, category chips (with a campus switcher chip), layers button, "my location" button,
 a draggable bottom sheet for place details on phones (a left side panel on desktop), a directions card with walking route
-cards, a snackbar for messages, and a coloured-icon POI pin set with a red selected pin. Everything is original code/styling —
+cards, a snackbar for messages, and a coloured-icon POI pin set with a red selected pin. Everything is original code/styling ,
 no Google branding, logos or assets are used. Icons are Material Icons (Apache-2.0).
 
-- **Four views** (layers button or menu; the choice is remembered): **Map** — our detailed OpenStreetMap map (roads with
-  names, building outlines, area/place labels, coloured POI dots; campus + UITH/Oja Oba area; works offline), **Dark** — the same
-  map in a dark theme with a dark interface, **Satellite** (default; Esri World Imagery) and **Amazon Map** — Amazon Location
+- **Four views** (layers button or menu; the choice is remembered): **Map**, our detailed OpenStreetMap map (roads with
+  names, building outlines, area/place labels, coloured POI dots; campus + UITH/Oja Oba area; works offline), **Dark**, the same
+  map in a dark theme with a dark interface, **Satellite** (default; Esri World Imagery) and **Amazon Map**, Amazon Location
   Service (HERE data), shown only when `NEXT_PUBLIC_LOCATION_*` is set (it is on the deployed site). If the Amazon map fails to
   load, the app falls back to the standard map with a message and keeps the saved choice. Rebuild the OpenStreetMap extract with
   `node scripts/build-basemap.mjs`. Label fonts are bundled in `public/fonts` (Open Sans, Apache-2.0).

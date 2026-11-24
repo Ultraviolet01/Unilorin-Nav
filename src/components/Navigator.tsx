@@ -30,7 +30,7 @@ const tap = (ms = 8) => { try { navigator.vibrate?.(ms); } catch { /* not suppor
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const KX = 111320 * Math.cos((8.48 * Math.PI) / 180), KY = 110574;
 const segLen = (a: [number, number], b: [number, number]) => Math.hypot((b[0] - a[0]) * KX, (b[1] - a[1]) * KY);
-/** true while `open`, and for `ms` after it closes — so things can animate OUT before unmounting */
+/** true while `open`, and for `ms` after it closes, so things can animate OUT before unmounting */
 function useMounted(open: boolean, ms: number) {
   const [m, setM] = useState(open);
   useEffect(() => { if (open) { setM(true); return; } const t = setTimeout(() => setM(false), ms); return () => clearTimeout(t); }, [open, ms]);
@@ -129,7 +129,7 @@ export default function Navigator() {
     m.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
     m.on("style.load", () => { awaiting.current = false; addOverlays(m); setReady(true); });
     // If the Amazon map can't be loaded (outage, bad key, offline) fall back to the standard map instead of leaving a blank screen.
-    m.on("error", () => { if (awaiting.current && baseRef.current === "aws") { awaiting.current = false; setToast("Amazon Map isn't available right now — showing the standard map instead."); skipSave.current = true; setBase("map"); } });
+    m.on("error", () => { if (awaiting.current && baseRef.current === "aws") { awaiting.current = false; setToast("Amazon Map isn't available right now, showing the standard map instead."); skipSave.current = true; setBase("map"); } });
     m.on("zoom", () => setZoomed(m.getZoom() >= 16));
     m.on("click", (e) => { if (!(e.originalEvent.target as HTMLElement).closest(".gm-poi")) { setLayerMenu(false); setCampusMenu(false); } });
     map.current = m;
@@ -229,11 +229,11 @@ export default function Navigator() {
   pickRef.current = pick;
   function choosePin(p: Poi) {
     if (tabPois.includes(p)) pick(p);
-    else { pending.current = p; setQ(""); setToast(`${p.name} is not on the ${CAMPUS[tab].label} tab — it is on ${CAMPUS[otherTab].label}. Switched for you.`); switchTab(otherTab); }
+    else { pending.current = p; setQ(""); setToast(`${p.name} is not on the ${CAMPUS[tab].label} tab, it is on ${CAMPUS[otherTab].label}. Switched for you.`); switchTab(otherTab); }
   }
   function jumpToAlias() {
     if (!aliasElsewhere) return;
-    setToast(`“${q.trim()}” is not on the ${CAMPUS[tab].label} tab — it is at ${aliasElsewhere.place}. Switched to ${CAMPUS[otherTab].label}; you will need a cab (see below).`);
+    setToast(`“${q.trim()}” is not on the ${CAMPUS[tab].label} tab, it is at ${aliasElsewhere.place}. Switched to ${CAMPUS[otherTab].label}; you will need a cab (see below).`);
     switchTab(otherTab); setTravel(true); setFocus(false);
   }
   const openTravel = () => { setSelected(null); setDir(null); clearRoute(); setQ(""); setFocus(false); setDrawer(false); setTravel(true); };
@@ -337,7 +337,7 @@ export default function Navigator() {
                 {recents.map((id) => pois.find((p) => p.id === id)).filter((p): p is Poi => !!p).map((p) => row("r" + p.id, <Icon name="history" size={20} />, p.name, `${CAT[p.category]?.noun ?? ""} · ${p.campus === "uith" ? "UITH & Colleges" : "Main Campus"}`, () => choosePin(p)))}
                 {!recents.length && tabPois.slice(0, 6).map((p) => pinRow(p))}
               </>) : (<>
-                {aliasElsewhere && row("alias", <Icon name="hospital" size={20} color="#D93025" />, <>“{q.trim()}” is at {aliasElsewhere.place}</>, `Not on this tab — tap to switch to ${CAMPUS[otherTab].label}`, jumpToAlias)}
+                {aliasElsewhere && row("alias", <Icon name="hospital" size={20} color="#D93025" />, <>“{q.trim()}” is at {aliasElsewhere.place}</>, `Not on this tab, tap to switch to ${CAMPUS[otherTab].label}`, jumpToAlias)}
                 {aliasHere && <div className="gm-row static"><span className="gm-ico"><Icon name="info" size={20} /></span><span><div className="gm-rt">This is at {aliasHere.place}</div><div className="gm-rs">Exact building not mapped yet</div></span></div>}
                 {travelHit && row("travel", <Icon name="taxi" size={20} color="#1A73E8" />, transport.shortTitle, "Cab and motor park advice", openTravel)}
                 {results.map((p) => pinRow(p))}
@@ -359,7 +359,7 @@ export default function Navigator() {
             <div className="gm-modes"><span className="on"><Icon name="walk" size={20} /> Walking</span></div>
             {dir.sfocus && (
               <div className="gm-drop inner" onMouseDown={(e) => e.preventDefault()}>
-                {row("me", <Icon name="locate" size={20} color="#1A73E8" />, "Your location", "Use GPS", () => { (document.activeElement as HTMLElement)?.blur(); setDir({ ...dir, locating: true, sfocus: false }); navigator.geolocation?.getCurrentPosition((p) => compute(dir.dest, { id: "gps", name: "Your location", lat: p.coords.latitude, lng: p.coords.longitude }), () => { setDir((d) => d && { ...d, locating: false }); setToast("Couldn't get your location — choose a starting place instead."); }, { enableHighAccuracy: true, timeout: 8000 }); })}
+                {row("me", <Icon name="locate" size={20} color="#1A73E8" />, "Your location", "Use GPS", () => { (document.activeElement as HTMLElement)?.blur(); setDir({ ...dir, locating: true, sfocus: false }); navigator.geolocation?.getCurrentPosition((p) => compute(dir.dest, { id: "gps", name: "Your location", lat: p.coords.latitude, lng: p.coords.longitude }), () => { setDir((d) => d && { ...d, locating: false }); setToast("Couldn't get your location, choose a starting place instead."); }, { enableHighAccuracy: true, timeout: 8000 }); })}
                 {startOptions.map((p) => row("s" + p.id, <Icon name={CAT[p.category]?.icon ?? "place"} size={20} color={CAT[p.category]?.color} />, p.name, CAT[p.category]?.noun, () => { (document.activeElement as HTMLElement)?.blur(); compute(dir.dest, { id: p.id, name: p.name, lat: p.lat, lng: p.lng }); }))}
               </div>)}
           </div>)}
@@ -391,10 +391,11 @@ export default function Navigator() {
       {sheetMounted && S && (
         <section className={`gm-sheet ${sheetClass} ${view ? "open" : "closing"}`} aria-label={sel?.name ?? "Details"} aria-hidden={!view}
           style={dragY !== null ? { transform: `translateY(${dragY}px)`, transition: "none" } : undefined}>
-          {S.view !== "dir" && (<>
-            <div className="gm-handle" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}><span /></div>
-            <button className="gm-x" aria-label="Close" onClick={closeCurrent}><Icon name="close" /></button>
-          </>)}
+          {S.view !== "dir" && (
+            <div className="gm-grip">
+              <div className="gm-handle" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}><span /></div>
+              <button className="gm-x" aria-label="Close" onClick={closeCurrent}><Icon name="close" /></button>
+            </div>)}
           <div key={`${S.view}:${sel?.id ?? ""}:${scat ?? ""}`} className="gm-swap">
             {S.view === "place" && sel && (
               <div className="gm-pad">
@@ -410,7 +411,7 @@ export default function Navigator() {
                 <div className="gm-photo">{sel.photo ? <img src={sel.photo} alt={sel.name} loading="lazy" /> : <><Icon name="photo" size={32} color="#9aa0a6" /><span>No photo yet</span></>}</div>
                 {sel.description && <div className="gm-info"><Icon name="info" size={22} color="#1a73e8" /><span>{sel.description}</span></div>}
                 <button className="gm-info click" onClick={() => copyCoords(sel)}><Icon name="place" size={22} color="#1a73e8" /><span>{sel.lat.toFixed(6)}, {sel.lng.toFixed(6)}</span><Icon name="copy" size={18} color="#5f6368" /></button>
-                <div className="gm-info"><Icon name="verified" size={22} color={sel.verified === false ? "#9aa0a6" : "#188038"} /><span>{sel.verified === false ? "Not yet confirmed — position from OpenStreetMap" : "Confirmed on the ground"}</span></div>
+                <div className="gm-info"><Icon name="verified" size={22} color={sel.verified === false ? "#9aa0a6" : "#188038"} /><span>{sel.verified === false ? "Not yet confirmed, position from OpenStreetMap" : "Confirmed on the ground"}</span></div>
                 {sel.campus === "uith" && <button className="gm-info click" onClick={openTravel}><Icon name="taxi" size={22} color="#1a73e8" /><span>Coming from the Main Campus? How to get here</span></button>}
               </div>)}
 
@@ -426,13 +427,15 @@ export default function Navigator() {
                   <span className="gm-rinfo"><b>{r.walkMinutes} min</b> <small>({fmtDist(routeMeters(r.coordinates))})</small>
                     <span className="gm-rl">{r.label}{r.custom ? "" : r.traced ? " · traced from satellite" : " · straight-line estimate"}</span></span>
                 </button>))}
-              <p className="gm-fine">{sdir.routes[0].traced || !sdir.routes[0].custom ? "Footpaths are traced from satellite images and not yet walked — allow a little extra time." : "Walked and recorded by the Unilorin Navigator team."}</p>
+              <p className="gm-fine">{sdir.routes[0].traced || !sdir.routes[0].custom ? "Footpaths are traced from satellite images and not yet walked, allow a little extra time." : "Walked and recorded by the Unilorin Navigator team."}</p>
             </>)}
 
             {S.view === "travel" && (
               <div className="gm-pad">
                 <h2 className="gm-title"><Icon name="taxi" size={26} color="#1a73e8" /> {transport.title}</h2>
                 <p className="gm-body">{transport.body}</p>
+                <ol className="gm-steps">{transport.steps.map((t) => <li key={t}>{t}</li>)}</ol>
+                <p className="gm-sub"><b>Good to know</b></p>
                 <ul className="gm-list">{transport.tips.map((t) => <li key={t}>{t}</li>)}</ul>
                 <p className="gm-sub"><b>What we know so far</b></p>
                 <ul className="gm-list">{transport.known.map((t) => <li key={t}>{t}</li>)}</ul>
@@ -442,7 +445,7 @@ export default function Navigator() {
           </div>
         </section>)}
 
-      {tab === "uith" && !view && <div className="gm-note"><b>University of Ilorin Teaching Hospital</b><br />Only the hospital grounds are mapped so far — wards, departments and emergency routes will be added after a site visit.<button onClick={openTravel}>Coming from the Main Campus? How to get here</button></div>}
+      {tab === "uith" && !view && <div className="gm-note"><b>University of Ilorin Teaching Hospital</b><br />Only the hospital grounds are mapped so far, wards, departments and emergency routes will be added after a site visit.<button onClick={openTravel}>Coming from the Main Campus? How to get here</button></div>}
 
       {/* ---- drawer ---- */}
       <Presence open={drawer} ms={260}>{(closing) => (<>

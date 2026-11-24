@@ -1,4 +1,4 @@
-// Icon paths from Google's Material Icons (Apache-2.0) — 24x24 viewBox — plus a hand-drawn mosque.
+// Icon paths from Google's Material Icons (Apache-2.0), 24x24 viewBox, plus a hand-drawn mosque.
 import type { Category } from "@/lib/pois";
 
 const P = {

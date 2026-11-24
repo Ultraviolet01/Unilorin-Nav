@@ -1,9 +1,9 @@
 # Data
 
-- `pois.json` — all pins. Entries with `"verified": false` are placeholders; replace them with real coordinates
+- `pois.json`, all pins. Entries with `"verified": false` are placeholders; replace them with real coordinates
   (Google Maps long-press → copy). Columns mirror the team Google Sheet:
   `name | category | lat | lng | description | photo_filename | campus`.
-- `routes.json` — hand-traced footpaths. Each Feature is a `LineString` with properties
+- `routes.json`, hand-traced footpaths. Each Feature is a `LineString` with properties
   `{ "from": "<poi id>", "to": "<poi id>", "label": "Shortcut via Sciences", "kind": "shortcut|main|shaded", "walkMinutes": 5 }`.
   Coordinates are `[lng, lat]`.
 
@@ -24,7 +24,7 @@
 
 **Footpaths**
 1. In Google My Maps (satellite), draw each footpath as a line and name it
-   `main-gate > library | Shortcut via Sciences | shortcut` — `<from id> > <to id> | <label> | <main|shortcut|shaded>`.
+   `main-gate > library | Shortcut via Sciences | shortcut`, `<from id> > <to id> | <label> | <main|shortcut|shaded>`.
    Ids are the pin names in lowercase with dashes (see `pois.json`).
 2. ⋮ → Export to KML/KMZ → untick "Export to a .KMZ" → download.
 3. ```bash
@@ -51,16 +51,16 @@ Coordinates are © OpenStreetMap contributors, ODbL (https://www.openstreetmap.o
 
 ## Footprints and walking network (`buildings.json`, `paths.json`)
 
-- `buildings.json` — 39 real building outlines for 29 pins, exported from OpenStreetMap (`npm run build-buildings`).
+- `buildings.json`, 39 real building outlines for 29 pins, exported from OpenStreetMap (`npm run build-buildings`).
   They line up with the satellite image. Rendered as 3D-extruded footprints on the map.
-- `paths.json` — a connected walking network of ~10.3 km (roads, footpaths/shortcuts, the covered walkway) covering the
+- `paths.json`, a connected walking network of ~10.3 km (roads, footpaths/shortcuts, the covered walkway) covering the
   central campus plus the north (Atlantic Heights Hostel) and south (Mosque, roundabout, Stadium). 29 of the 30 pins are
   reachable; only UITH (about 15 km away, separate site) is not. Built by `npm run trace-central`.
   - Roads and footpaths were **traced by eye from Esri World Imagery** (zoom 18) and drawn back onto the imagery to check
     them; expect **roughly 5-10 m** error and some guessed short connectors into building entrances.
   - The covered walkway uses the OSM "Walkway" building outlines.
   - Needs ground-truthing: the link between the Stadium west road and the ring road ("unverified" in the script), every
-    footpath connector into a building, and the road/footpath junctions. Nobody has walked these yet — on the field trip,
+    footpath connector into a building, and the road/footpath junctions. Nobody has walked these yet, on the field trip,
     walk the shortcuts and fix `scripts/trace-central.mjs` (pixel coordinates are easy to nudge) or send a My Maps KML.
   - Not covered: anything outside the traced area, and UITH.
 - The app routes over this network (`src/lib/graph.ts`, Dijkstra) and offers "Shortest path" and "Mostly main roads"
@@ -72,7 +72,7 @@ Ilorin has many motor parks and **none has been confirmed** as the one for UITH 
 (sources checked Nov 2026): the state recertified 12 private motor parks in July 2025 (names published, locations not);
 the campus park moved in Oct 2025 to near the Gate and Fountain Roundabout; and a few Tanke-area stops/terminals exist in
 OpenStreetMap (listed in `faculty-checklist.csv`, unverified). The app's travel notice (`transport.json`) says to ask
-which park serves the destination until the field trip fills this in — update `transport.json` then.
+which park serves the destination until the field trip fills this in, update `transport.json` then.
 
 ## Cross-tab search (`elsewhere.json`)
 
@@ -80,12 +80,12 @@ Search looks across **both** tabs. A pin on the other tab appears with "· on <t
 with a notice. For departments/places that have **no pin yet** but are known to be on the other site, add an entry:
 `{ "terms": ["physiology"], "campus": "uith", "place": "the New College", "note": "..." }`. Typing a matching term on the
 wrong tab prompts "it is at <place>", switches tab on Enter/tap and shows the cab-to-the-motor-park notice.
-Currently seeded with Physiology (reported by the team) and the health-sciences colleges — **add more departments as the
+Currently seeded with Physiology (reported by the team) and the health-sciences colleges, **add more departments as the
 field trip confirms which are at the Old/New College**; don't add one unless it's confirmed.
 
 ## Field collector (`/field` page)
 
-Open `https://<your-site>/field` on a phone (GPS needs HTTPS — fine on Amplify and on localhost). It works offline once
+Open `https://<your-site>/field` on a phone (GPS needs HTTPS, fine on Amplify and on localhost). It works offline once
 loaded and keeps everything on the phone until exported.
 
 1. Enter your name, then tap a place from the checklist (existing pins show as "re-check" and tell you how many metres
