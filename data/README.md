@@ -55,7 +55,7 @@ Coordinates are © OpenStreetMap contributors, ODbL (https://www.openstreetmap.o
   They line up with the satellite image. Rendered as 3D-extruded footprints on the map.
 - `paths.json` — a connected walking network of ~10.3 km (roads, footpaths/shortcuts, the covered walkway) covering the
   central campus plus the north (Atlantic Heights Hostel) and south (Mosque, roundabout, Stadium). 29 of the 30 pins are
-  reachable; only UITH (about 13 km away, separate site) is not. Built by `npm run trace-central`.
+  reachable; only UITH (about 15 km away, separate site) is not. Built by `npm run trace-central`.
   - Roads and footpaths were **traced by eye from Esri World Imagery** (zoom 18) and drawn back onto the imagery to check
     them; expect **roughly 5-10 m** error and some guessed short connectors into building entrances.
   - The covered walkway uses the OSM "Walkway" building outlines.

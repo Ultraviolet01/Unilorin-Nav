@@ -28,3 +28,6 @@ ATM (add one row per machine),atm,,,None mapped in OpenStreetMap; list each by l
 Mini-Campus canteens and shopping complex,eatery,,,Per Wikipedia the Mini-Campus has canteens and a shopping complex,,mini
 College of Health Sciences (Mini-Campus),health,,,Not in OpenStreetMap - locate it,,mini
 UITH Main Entrance,uith,,,"Current UITH pin is the hospital centre, not the entrance",,uith
+Old College (health sciences),health,,,Reported off the Main Campus - students take a cab to the motor park. Confirm location and which park,,uith
+New College (health sciences),health,,,Reported off the Main Campus - students take a cab to the motor park. Confirm location and which park,,uith
+Motor park for trips to UITH / the colleges,gate,,,Confirm which park students use for UITH and the colleges and typical fares,,main
