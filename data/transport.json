@@ -1,13 +1,18 @@
 {
   "shortTitle": "Going to UITH or the colleges? How to get there",
   "title": "Getting to UITH and the Old / New College",
-  "body": "UITH and the Old and New College sites are not on the Main Campus, so you cannot walk there. Take a cab to the motor park first, then continue to your destination from there.",
+  "body": "UITH and the Old and New College sites are not on the Main Campus, so you cannot walk there. Take a cab to a motor park in town and continue to your destination from there. Ilorin has several motor parks, so ask which one serves the place you are going.",
   "tips": [
+    "Board only at recognised motor parks — the state government is cracking down on illegal roadside parks.",
     "It is a trip across town, not across campus — leave extra time, especially before a lecture or exam.",
     "Agree the fare with the driver before you get in.",
     "Tell the driver the exact name: \"UITH\", \"Old College\" or \"New College\"."
   ],
+  "known": [
+    "On campus, the new park is near the Gate and the Fountain Roundabout (university buses, reported at ₦100 to campus, late 2025).",
+    "Tanke Terminus to campus was reported at ₦200 (late 2025)."
+  ],
   "verified": false,
-  "note": "Not yet confirmed on the ground: which motor park to use, the route and typical fares. To be checked on the field trip.",
-  "keywords": ["uith", "teaching hospital", "hospital", "old college", "new college", "college", "health sciences", "medical", "clinical", "medicine", "nursing", "pharmacy"]
+  "note": "Not yet confirmed: which motor park serves UITH, the Old College or the New College, the route, and current fares. To be checked on the field trip.",
+  "keywords": ["uith", "teaching hospital", "hospital", "old college", "new college", "college", "health sciences", "medical", "clinical", "medicine", "nursing", "pharmacy", "motor park", "park", "cab", "taxi"]
 }

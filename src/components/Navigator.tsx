@@ -150,6 +150,8 @@ export default function Navigator() {
           <h2>🚕 {transport.title}</h2>
           <p>{transport.body}</p>
           <ul>{transport.tips.map((t) => <li key={t}>{t}</li>)}</ul>
+          <p><strong>What we know so far</strong></p>
+          <ul>{transport.known.map((t) => <li key={t}>{t}</li>)}</ul>
           {!transport.verified && <p className="warn">{transport.note}</p>}
           <button className="primary" onClick={() => switchTab(tab === "main" ? "uith" : "main")}>{tab === "main" ? "Show UITH on the map" : "Back to Main Campus"}</button>
         </div>

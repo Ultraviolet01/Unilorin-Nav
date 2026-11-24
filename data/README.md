@@ -13,7 +13,7 @@
 1. Copy `field-sheet-template.csv` into a shared Google Sheet. Fill `name`, `category`, `lat`, `lng`, `description`,
    `photo_filename`, `campus` (`main` | `mini` | `uith`). You can paste Google Maps' `8.4821, 4.6703` straight into
    the `lat` cell and leave `lng` empty.
-2. Categories: `faculty hostel eatery atm gate health admin cbt uith lecture sports worship market`.
+2. Categories: `faculty hostel eatery atm gate health admin cbt uith lecture sports worship market transport`.
 3. Put photos in `public/photos/` using the filenames from the sheet (keep them small, ~100 KB, for slow connections).
 4. File → Download → CSV, then:
    ```bash
@@ -65,3 +65,11 @@ Coordinates are © OpenStreetMap contributors, ODbL (https://www.openstreetmap.o
   - Not covered: anything outside the traced area, and UITH.
 - The app routes over this network (`src/lib/graph.ts`, Dijkstra) and offers "Shortest path" and "Mostly main roads"
   when they differ. Hand-made entries in `routes.json` take priority.
+
+## Transport (UITH and the colleges)
+
+Ilorin has many motor parks and **none has been confirmed** as the one for UITH or the Old/New College. What is known
+(sources checked Nov 2026): the state recertified 12 private motor parks in July 2025 (names published, locations not);
+the campus park moved in Oct 2025 to near the Gate and Fountain Roundabout; and a few Tanke-area stops/terminals exist in
+OpenStreetMap (listed in `faculty-checklist.csv`, unverified). The app's travel notice (`transport.json`) says to ask
+which park serves the destination until the field trip fills this in — update `transport.json` then.

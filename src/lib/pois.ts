@@ -3,7 +3,7 @@ import routes from "../../data/routes.json";
 import paths from "../../data/paths.json";
 import { buildGraph, shortest, snap, type Graph } from "./graph";
 
-export type Category = "faculty" | "hostel" | "eatery" | "atm" | "gate" | "health" | "admin" | "cbt" | "uith" | "lecture" | "sports" | "worship" | "market";
+export type Category = "faculty" | "hostel" | "eatery" | "atm" | "gate" | "health" | "admin" | "cbt" | "uith" | "lecture" | "sports" | "worship" | "market" | "transport";
 export interface Poi {
   id: string; name: string; category: Category; lat: number; lng: number;
   description: string; photo?: string; campus: "main" | "mini" | "uith"; verified?: boolean; source?: string;
@@ -18,7 +18,7 @@ export const CATEGORY_META: Record<Category, { icon: string; color: string }> = 
   gate: { icon: "🚪", color: "#64748B" }, health: { icon: "🏥", color: "#EF4444" },
   admin: { icon: "🏢", color: "#6366F1" }, cbt: { icon: "💻", color: "#14B8A6" },
   uith: { icon: "🏨", color: "#DC2626" }, lecture: { icon: "📚", color: "#8B5CF6" },
-  sports: { icon: "🏟️", color: "#22C55E" }, worship: { icon: "🕌", color: "#0891B2" }, market: { icon: "🛍️", color: "#EA580C" },
+  sports: { icon: "🏟️", color: "#22C55E" }, worship: { icon: "🕌", color: "#0891B2" }, market: { icon: "🛍️", color: "#EA580C" }, transport: { icon: "🚌", color: "#0F766E" },
 };
 
 export async function loadPois(): Promise<Poi[]> {

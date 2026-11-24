@@ -30,4 +30,9 @@ College of Health Sciences (Mini-Campus),health,,,Not in OpenStreetMap - locate 
 UITH Main Entrance,uith,,,"Current UITH pin is the hospital centre, not the entrance",,uith
 Old College (health sciences),health,,,Reported off the Main Campus - students take a cab to the motor park. Confirm location and which park,,uith
 New College (health sciences),health,,,Reported off the Main Campus - students take a cab to the motor park. Confirm location and which park,,uith
-Motor park for trips to UITH / the colleges,gate,,,Confirm which park students use for UITH and the colleges and typical fares,,main
+Motor park(s) for UITH and the colleges - find out which,transport,,,No source says which park serves UITH / Old College / New College - ask students and drivers; record route and fare,,main
+Campus new park (near Gate and Fountain Roundabout),transport,,,Relocated Oct 2025 - exact spot not published,,main
+UNILORIN bus terminus (Tanke),transport,8.48159,4.60541,From OpenStreetMap (node 13047974703) - confirm,,main
+Station Road bus station (Tanke) A,transport,8.48071,4.58937,From OpenStreetMap (node 13048283366) - confirm,,main
+Station Road bus station (Tanke) B,transport,8.48159,4.58951,From OpenStreetMap (node 13048283367) - confirm,,main
+Offa Garage Motor Park,transport,8.45487,4.58054,From OpenStreetMap (node 13087548538) - confirm,,main

@@ -3,7 +3,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { parseCsv, slug, inIlorin } from "./lib.mjs";
 
-const CATS = ["faculty", "hostel", "eatery", "atm", "gate", "health", "admin", "cbt", "uith", "lecture", "sports", "worship", "market"];
+const CATS = ["faculty", "hostel", "eatery", "atm", "gate", "health", "admin", "cbt", "uith", "lecture", "sports", "worship", "market", "transport"];
 const CAMPUS = ["main", "mini", "uith"];
 const [, , input, out = "data/pois.json"] = process.argv;
 if (!input) { console.error("Usage: node scripts/sheet-to-pois.mjs <sheet.csv> [out]"); process.exit(1); }
