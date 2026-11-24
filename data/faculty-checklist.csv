@@ -1,29 +1,30 @@
 name,category,lat,lng,description,photo_filename,campus
-Faculty of Agriculture,faculty,,,,,main
-Faculty of Arts,faculty,,,,,main
-Faculty of Communication & Information Sciences,faculty,8.488835,4.674451,From OpenStreetMap (way 1079750388) - confirm on the ground,,main
-Faculty of Education,faculty,,,,,main
-Faculty of Engineering and Technology,faculty,,,,,main
-Faculty of Environmental Sciences,faculty,,,,,main
-Faculty of Law,faculty,,,,,main
-Faculty of Life Sciences,faculty,,,,,main
-Faculty of Management Sciences,faculty,,,,,main
-Faculty of Pharmaceutical Sciences,faculty,,,,,main
-Faculty of Physical Sciences,faculty,,,,,main
-Faculty of Social Sciences,faculty,,,,,main
-Faculty of Veterinary Medicine,faculty,,,,,main
-Faculty of Basic Medical Sciences,faculty,,,,,main
-Faculty of Basic Clinical Sciences,faculty,,,,,main
-Faculty of Clinical Sciences,faculty,,,,,main
-Senate Building (Vice-Chancellor's office),admin,8.480083,4.673828,From OpenStreetMap (way 1079418826) - confirm on the ground,,main
-Main University Library,admin,,,,,main
-Postgraduate School,admin,,,,,main
-COMSIT,admin,,,,,main
-Central Research Laboratory,admin,,,,,main
-Kaduna Nzeogwu Building (Students' Union),admin,,,Named in a Oct 2024 press release - confirm what it is and where,,main
-University Computer-Based Test (CBT) Centre,cbt,,,,,main
-University Central Mosque,admin,8.47794,4.670966,From OpenStreetMap (way 1147907307) - confirm on the ground,,main
+Faculty of Agriculture,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Arts,faculty,8.485483,4.672024,From OpenStreetMap - confirm on the ground,,main
+Faculty of Communication & Information Sciences,faculty,8.488882,4.674395,From OpenStreetMap - confirm on the ground,,main
+Faculty of Education,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Engineering and Technology,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Environmental Sciences,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Law,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Life Sciences,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Management Sciences,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Pharmaceutical Sciences,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Physical Sciences,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Social Sciences,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Veterinary Medicine,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Basic Medical Sciences,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Basic Clinical Sciences,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Clinical Sciences,faculty,,,Not in OpenStreetMap - locate it,,main
+Postgraduate School,admin,,,Not in OpenStreetMap - locate it,,main
+COMSIT,admin,,,Not in OpenStreetMap - locate it,,main
+Central Research Laboratory,admin,,,Not in OpenStreetMap - locate it,,main
+Kaduna Nzeogwu Building,admin,,,Named in an Oct 2024 press release - find out what it is and where,,main
+University Computer-Based Test (CBT) Centre,cbt,,,Not in OpenStreetMap - locate it,,main
 New University Park (campus bus park),admin,,,Relocated Oct 2025; announced as near the Gate and the Fountain Roundabout - exact spot not published,,main
 Fountain Roundabout,gate,,,Bus closing-time pick-up point per Oct 2025 university statement,,main
-Mini-Campus canteens and shopping complex,eatery,,,Per Wikipedia the Mini-Campus has canteens and a shopping complex - find each eatery by name,,mini
-College of Health Sciences / Mini-Campus,health,,,,,mini
+Main Gate,gate,,,Not in OpenStreetMap - locate it,,main
+Eatery / canteen (add one row per place),eatery,,,None mapped in OpenStreetMap; list each by name,,main
+ATM (add one row per machine),atm,,,None mapped in OpenStreetMap; list each by location,,main
+Mini-Campus canteens and shopping complex,eatery,,,Per Wikipedia the Mini-Campus has canteens and a shopping complex,,mini
+College of Health Sciences (Mini-Campus),health,,,Not in OpenStreetMap - locate it,,mini
+UITH Main Entrance,uith,,,"Current UITH pin is the hospital centre, not the entrance",,uith

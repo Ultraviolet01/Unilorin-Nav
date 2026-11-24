@@ -1,7 +1,7 @@
 import pois from "../../data/pois.json";
 import routes from "../../data/routes.json";
 
-export type Category = "faculty" | "hostel" | "eatery" | "atm" | "gate" | "health" | "admin" | "cbt" | "uith";
+export type Category = "faculty" | "hostel" | "eatery" | "atm" | "gate" | "health" | "admin" | "cbt" | "uith" | "lecture" | "sports" | "worship" | "market";
 export interface Poi {
   id: string; name: string; category: Category; lat: number; lng: number;
   description: string; photo?: string; campus: "main" | "mini" | "uith"; verified?: boolean; source?: string;
@@ -15,7 +15,8 @@ export const CATEGORY_META: Record<Category, { icon: string; color: string }> = 
   eatery: { icon: "🍽️", color: "#F59E0B" }, atm: { icon: "💳", color: "#10B981" },
   gate: { icon: "🚪", color: "#64748B" }, health: { icon: "🏥", color: "#EF4444" },
   admin: { icon: "🏢", color: "#6366F1" }, cbt: { icon: "💻", color: "#14B8A6" },
-  uith: { icon: "🏨", color: "#DC2626" },
+  uith: { icon: "🏨", color: "#DC2626" }, lecture: { icon: "📚", color: "#8B5CF6" },
+  sports: { icon: "🏟️", color: "#22C55E" }, worship: { icon: "🕌", color: "#0891B2" }, market: { icon: "🛍️", color: "#EA580C" },
 };
 
 export async function loadPois(): Promise<Poi[]> {

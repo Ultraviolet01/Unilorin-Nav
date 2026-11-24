@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "import-pois": "node scripts/import-pois.mjs",
+    "pull-osm": "node scripts/pull-osm.mjs",
     "sheet-to-pois": "node scripts/sheet-to-pois.mjs",
     "kml-to-routes": "node scripts/kml-to-routes.mjs"
   },

@@ -13,7 +13,7 @@
 1. Copy `field-sheet-template.csv` into a shared Google Sheet. Fill `name`, `category`, `lat`, `lng`, `description`,
    `photo_filename`, `campus` (`main` | `mini` | `uith`). You can paste Google Maps' `8.4821, 4.6703` straight into
    the `lat` cell and leave `lng` empty.
-2. Categories: `faculty hostel eatery atm gate health admin cbt uith`.
+2. Categories: `faculty hostel eatery atm gate health admin cbt uith lecture sports worship market`.
 3. Put photos in `public/photos/` using the filenames from the sheet (keep them small, ~100 KB, for slow connections).
 4. File → Download → CSV, then:
    ```bash
@@ -36,10 +36,15 @@ Then `npm run import-pois` pushes the pins to DynamoDB.
 
 ## Where the current pins come from
 
-`pois.json` holds only pins with a published source; none is verified on the ground yet (`verified: false`).
-`faculty-checklist.csv` lists everything still to locate: the 16 faculty-level units (13 faculties plus the 3 under
-"Colleges" on unilorin.edu.ng/academics), key admin buildings, the park and the Mini-Campus eateries. Fill in `lat`/`lng`
-there, then run `npm run sheet-to-pois`.
+`pois.json` has 30 pins, every one sourced from OpenStreetMap (OSM) with its OSM id and last-edit date in the `source`
+field. None is verified on the ground yet (`verified: false`). OSM only has a central cluster of the campus (mapped
+mostly in 2022-23): Senate, library, SUB, market, clinics, lecture theatres, Arts, CIS, some Social/Management Sciences
+department blocks, three hostels, the mosque and stadium, plus the UITH site. Run `npm run pull-osm` to see what has
+been added or edited since.
 
-Some coordinates come from OpenStreetMap — © OpenStreetMap contributors, ODbL (https://www.openstreetmap.org/copyright).
-Department buildings, eateries, ATMs and the new park have no published coordinates anywhere we could reach.
+`faculty-checklist.csv` is what is still missing: 14 of the 16 faculty-level units (13 faculties plus the 3 listed under
+"Colleges" on unilorin.edu.ng/academics), the Postgraduate School, COMSIT, the CBT centre, the park, the main gate,
+eateries, ATMs and the UITH entrance. Rows with `lat`/`lng` filled came from OSM. Fill the blanks, then run
+`npm run sheet-to-pois`. (Note: it replaces `pois.json`, so keep the existing pins in your sheet too.)
+
+Coordinates are © OpenStreetMap contributors, ODbL (https://www.openstreetmap.org/copyright).
