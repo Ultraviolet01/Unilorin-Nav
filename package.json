@@ -20,6 +20,8 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1176.0",
+    "@aws-sdk/util-dynamodb": "^3.996.9",
     "@types/node": "^22.9.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

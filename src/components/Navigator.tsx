@@ -389,7 +389,7 @@ export default function Navigator() {
           <hr />
           {([["map", "Map view"], ["dark", "Dark map"], ["sat", "Satellite view"]] as [Base, string][]).map(([b, l]) => <button key={b} className={`gm-item ${base === b ? "on" : ""}`} onClick={() => { setBase(b); setDrawer(false); }}><Icon name="layers" size={22} />{l}</button>)}
           <button className="gm-item" onClick={openTravel}><Icon name="taxi" size={22} />Getting to UITH &amp; the colleges</button>
-          <a className="gm-item" href="/field"><Icon name="photo" size={22} />Field collector (team)</a>
+          <a className="gm-item" href="/field/"><Icon name="photo" size={22} />Field collector (team)</a>
           <p className="gm-fine">Map data © OpenStreetMap contributors. Icons: Material Icons (Apache-2.0).</p>
         </aside>)}
 

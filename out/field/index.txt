@@ -1,0 +1,68 @@
+1:"$Sreact.fragment"
+2:I[9766,[],""]
+3:I[8924,[],""]
+4:I[4284,["177","static/chunks/app/layout-131ae122ea695da4.js"],"default"]
+5:I[2663,["141","static/chunks/app/field/page-f6b1f577a4c00549.js"],"default"]
+a:I[7150,[],""]
+:HL["/_next/static/css/27d64e9ffdc6cf1c.css","style"]
+:HL["/_next/static/css/d5bf5f4dbe31ff39.css","style"]
+6:T12f9,name,category,lat,lng,description,photo_filename,campus
+Faculty of Agriculture,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Arts,faculty,8.485483,4.672024,From OpenStreetMap - confirm on the ground,,main
+Faculty of Communication & Information Sciences,faculty,8.488882,4.674395,From OpenStreetMap - confirm on the ground,,main
+Faculty of Education,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Engineering and Technology,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Environmental Sciences,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Law,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Life Sciences,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Management Sciences,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Pharmaceutical Sciences,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Physical Sciences,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Social Sciences,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Veterinary Medicine,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Basic Medical Sciences,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Basic Clinical Sciences,faculty,,,Not in OpenStreetMap - locate it,,main
+Faculty of Clinical Sciences,faculty,,,Not in OpenStreetMap - locate it,,main
+Postgraduate School,admin,,,Not in OpenStreetMap - locate it,,main
+COMSIT,admin,,,Not in OpenStreetMap - locate it,,main
+Central Research Laboratory,admin,,,Not in OpenStreetMap - locate it,,main
+Kaduna Nzeogwu Building,admin,,,Named in an Oct 2024 press release - find out what it is and where,,main
+University Computer-Based Test (CBT) Centre,cbt,,,Not in OpenStreetMap - locate it,,main
+New University Park (campus bus park),admin,,,Relocated Oct 2025; announced as near the Gate and the Fountain Roundabout - exact spot not published,,main
+Fountain Roundabout,gate,,,Bus closing-time pick-up point per Oct 2025 university statement,,main
+Main Gate,gate,,,Not in OpenStreetMap - locate it,,main
+Eatery / canteen (add one row per place),eatery,,,None mapped in OpenStreetMap; list each by name,,main
+ATM (add one row per machine),atm,,,None mapped in OpenStreetMap; list each by location,,main
+Mini-Campus canteens and shopping complex,eatery,,,Per Wikipedia the Mini-Campus has canteens and a shopping complex,,mini
+College of Health Sciences (Mini-Campus),health,,,Not in OpenStreetMap - locate it,,mini
+UITH Main Entrance,uith,,,"Current UITH pin is the hospital centre, not the entrance",,uith
+Old College (health sciences),health,,,Reported off the Main Campus - students take a cab to the motor park. Confirm location and which park,,uith
+New College (health sciences),health,,,Reported off the Main Campus - students take a cab to the motor park. Confirm location and which park,,uith
+Motor park(s) for UITH and the colleges - find out which,transport,,,No source says which park serves UITH / Old College / New College - ask students and drivers; record route and fare,,main
+Campus new park (near Gate and Fountain Roundabout),transport,,,Relocated Oct 2025 - exact spot not published,,main
+UNILORIN bus terminus (Tanke),transport,8.48159,4.60541,From OpenStreetMap (node 13047974703) - confirm,,main
+Station Road bus station (Tanke) A,transport,8.48071,4.58937,From OpenStreetMap (node 13048283366) - confirm,,main
+Station Road bus station (Tanke) B,transport,8.48159,4.58951,From OpenStreetMap (node 13048283367) - confirm,,main
+Offa Garage Motor Park,transport,8.45487,4.58054,From OpenStreetMap (node 13087548538) - confirm,,main
+Social Sciences Lecture Hall (LH),lecture,8.486683,4.673946,From OpenStreetMap (way 1078465243): labelled 'LH' and described as the Faculty of Social Sciences Lecture Hall - confirm,,main
+Amphitheater (near LT 4),lecture,8.484706,4.67412,From OpenStreetMap (way 1078532847) - confirm,,main
+Blocks 1-10 (lecture-theatre cluster),lecture,,,OpenStreetMap labels ten buildings 'Block 1' to 'Block 10' along the covered walkway (around 8.4807-8.4846 N 4.6739-4.6747 E) - identify what each is and record each entrance,,main
+Faculty lecture theatres and halls (add each by name),lecture,,,Every faculty has its own lecture venues - list each one with its name and entrance,,main
+Old College lecture halls and classrooms,lecture,,,Where College of Health Sciences students receive lectures - find names and entrances,,uith
+New College - Lecture Hall A,lecture,,,Reported by the team: the New College has two lecture halls (A and B) - record the entrance,,uith
+New College - Lecture Hall B,lecture,,,Reported by the team: the New College has two lecture halls (A and B) - record the entrance,,uith
+Multipurpose Hall (MPH),admin,,,Used for Senate luncheons and ceremonies (university bulletins) - location not published; find it and record the entrance,,main
+0:{"P":null,"b":"uuCVQ4J6O-fBfubLFnZ5P","p":"","c":["","field",""],"i":false,"f":[[["",{"children":["field",{"children":["__PAGE__",{}]}]},"$undefined","$undefined",true],["",["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/css/27d64e9ffdc6cf1c.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}]],["$","html",null,{"lang":"en","children":["$","body",null,{"children":[["$","$L2",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L3",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":404}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],[]],"forbidden":"$undefined","unauthorized":"$undefined"}],["$","$L4",null,{}]]}]}]]}],{"children":["field",["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L3",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","forbidden":"$undefined","unauthorized":"$undefined"}]]}],{"children":["__PAGE__",["$","$1","c",{"children":[["$","$L5",null,{"csv":"$6"}],["$L7"],"$L8"]}],{},null,false]},null,false]},null,false],"$L9",false]],"m":"$undefined","G":["$a",[]],"s":false,"S":true}
+b:I[4431,[],"OutletBoundary"]
+d:I[5278,[],"AsyncMetadataOutlet"]
+f:I[4431,[],"ViewportBoundary"]
+11:I[4431,[],"MetadataBoundary"]
+12:"$Sreact.suspense"
+7:["$","link","0",{"rel":"stylesheet","href":"/_next/static/css/d5bf5f4dbe31ff39.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}]
+8:["$","$Lb",null,{"children":["$Lc",["$","$Ld",null,{"promise":"$@e"}]]}]
+9:["$","$1","h",{"children":[null,[["$","$Lf",null,{"children":"$L10"}],null],["$","$L11",null,{"children":["$","div",null,{"hidden":true,"children":["$","$12",null,{"fallback":null,"children":"$L13"}]}]}]]}]
+10:[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","2",{"name":"theme-color","content":"#7C3AED"}]]
+c:null
+14:I[622,[],"IconMark"]
+e:{"metadata":[["$","title","0",{"children":"Field collector · Unilorin Navigator"}],["$","meta","1",{"name":"description","content":"Campus and UITH navigation for Unilorin students."}],["$","link","2",{"rel":"manifest","href":"/manifest.json","crossOrigin":"$undefined"}],["$","link","3",{"rel":"icon","href":"/icons/icon.svg"}],["$","$L14","4",{}]],"error":null,"digest":"$undefined"}
+13:"$e:metadata"

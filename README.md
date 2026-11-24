@@ -16,6 +16,8 @@ Without AWS keys the map falls back to free Esri satellite tiles and pins come f
 See `data/README.md`. Seed pins are **placeholders** (`verified: false`) until real coordinates are collected.
 
 ## AWS
+See **`docs/AWS-SETUP.md`** for what is deployed (nothing yet), the exact steps, and costs. Summary:
+
 - `lambda/getPOIs` — Scan DynamoDB table `UnilorinPOIs` (partition key `id`), behind API Gateway `GET /pois`.
 - `npm run import-pois` — bulk-load `data/pois.json` into DynamoDB.
 - Set `NEXT_PUBLIC_API_URL` to the API Gateway invoke URL.

@@ -1,0 +1,91 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Unilorin Navigator backend - POI database + API (DynamoDB, Lambda, API Gateway HTTP API) and an Amazon Location map with a referrer-restricted key.
+
+Parameters:
+  AllowedOrigin:
+    Type: String
+    Default: "*"
+    Description: Website origin allowed to call the API (CORS), e.g. https://main.d1abc.amplifyapp.com - use "*" only while testing.
+  AllowedReferer:
+    Type: String
+    Default: "https://*.amplifyapp.com/*"
+    Description: Referrer pattern allowed to use the map key. Use your site URL once you have a custom domain.
+  MapStyle:
+    Type: String
+    Default: VectorHereExplore
+    AllowedValues: [VectorHereExplore, VectorEsriStreets, VectorEsriNavigation, VectorOpenDataStandardLight]
+    Description: Amazon Location map style for the "Map" view.
+
+Resources:
+  PoiTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins: [!Ref AllowedOrigin]
+        AllowMethods: [GET]
+        MaxAge: 3600
+
+  PoiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../lambda/getPOIs/
+      Handler: index.handler
+      Runtime: nodejs24.x
+      MemorySize: 256
+      Timeout: 10
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref PoiTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref PoiTable
+      Events:
+        GetPois:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /pois
+            Method: GET
+
+  LocationMap:
+    Type: AWS::Location::Map
+    Properties:
+      MapName: !Sub "${AWS::StackName}-map"
+      Configuration:
+        Style: !Ref MapStyle
+
+  LocationApiKey:
+    Type: AWS::Location::APIKey
+    Properties:
+      KeyName: !Sub "${AWS::StackName}-web-key"
+      NoExpiry: true
+      Restrictions:
+        AllowActions: ["geo:GetMap*"]
+        AllowResources: [!GetAtt LocationMap.Arn]
+        AllowReferers: [!Ref AllowedReferer, "http://localhost:3000/*"]
+
+Outputs:
+  ApiUrl:
+    Description: Put this in Amplify as NEXT_PUBLIC_API_URL
+    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}"
+  TableName:
+    Description: DynamoDB table - load the pins with TABLE_NAME=<this> npm run import-pois
+    Value: !Ref PoiTable
+  MapName:
+    Description: Put this in Amplify as NEXT_PUBLIC_LOCATION_MAP_NAME
+    Value: !Ref LocationMap
+  MapApiKeyName:
+    Description: "Get the key value with: aws location describe-key --key-name <this> --query Key --output text  (then put it in Amplify as NEXT_PUBLIC_LOCATION_API_KEY)"
+    Value: !Ref LocationApiKey
