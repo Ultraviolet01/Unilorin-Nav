@@ -1,0 +1,14 @@
+[
+  {
+    "terms": ["physiology"],
+    "campus": "uith",
+    "place": "the New College (College of Health Sciences)",
+    "note": "Reported by the project team; confirm on the field trip."
+  },
+  {
+    "terms": ["basic medical sciences", "basic clinical sciences", "clinical sciences", "college of health sciences", "old college", "new college"],
+    "campus": "uith",
+    "place": "the Old / New College (College of Health Sciences)",
+    "note": "The official site lists these as Colleges; the team reports they are off the Main Campus. Exact sites not yet mapped."
+  }
+]

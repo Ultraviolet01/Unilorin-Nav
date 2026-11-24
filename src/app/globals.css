@@ -18,3 +18,5 @@
 .chip{margin-top:8px;padding:8px 12px;border:0;border-radius:999px;background:#fff;font-size:13px;font-weight:600;box-shadow:0 2px 8px #0004}
 .link{display:block;margin:8px 0;padding:0;border:0;background:none;color:#7C3AED;font-weight:600;text-decoration:underline;font-size:14px}
 .sheet ul{padding-left:18px;margin:8px 0}
+.results em{color:#6b7280;font-style:normal;font-size:12px}.info{display:block;padding:12px 14px;font-size:14px;color:#374151}
+.toast{margin-top:8px;background:#7C3AED;color:#fff;padding:10px 12px;border-radius:12px;font-size:14px;box-shadow:0 2px 10px #0004}.toast button{float:right;border:0;background:none;color:#fff;font-size:18px;line-height:1}

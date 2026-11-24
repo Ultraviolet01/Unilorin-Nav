@@ -73,3 +73,12 @@ Ilorin has many motor parks and **none has been confirmed** as the one for UITH 
 the campus park moved in Oct 2025 to near the Gate and Fountain Roundabout; and a few Tanke-area stops/terminals exist in
 OpenStreetMap (listed in `faculty-checklist.csv`, unverified). The app's travel notice (`transport.json`) says to ask
 which park serves the destination until the field trip fills this in — update `transport.json` then.
+
+## Cross-tab search (`elsewhere.json`)
+
+Search looks across **both** tabs. A pin on the other tab appears with "· on <tab>", and choosing it switches tab and opens it
+with a notice. For departments/places that have **no pin yet** but are known to be on the other site, add an entry:
+`{ "terms": ["physiology"], "campus": "uith", "place": "the New College", "note": "..." }`. Typing a matching term on the
+wrong tab prompts "it is at <place>", switches tab on Enter/tap and shows the cab-to-the-motor-park notice.
+Currently seeded with Physiology (reported by the team) and the health-sciences colleges — **add more departments as the
+field trip confirms which are at the Old/New College**; don't add one unless it's confirmed.
