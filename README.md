@@ -43,3 +43,15 @@ no Google branding, logos or assets are used. Icons are Material Icons (Apache-2
 - Selecting a place highlights its real building footprint. Add `?paths` to the URL to overlay the traced walking network (dev only).
 - Search ranks exact/prefix matches first, understands aliases, and looks across both campuses (see `data/README.md`).
 - Deep links: `/#p=<pin-id>` opens a place, `/#uith` opens the UITH & Colleges tab. "Share" on a place copies/shares that link.
+
+## Motion
+
+All animation is plain CSS plus a few lines of code (no animation library, so the app stays small for slow connections).
+One shared set of curves lives at the top of the motion section in `src/app/globals.css` (`--ease-out`, `--spring`, `--ease-in`).
+
+- **Pins** pop in with a stagger when you open a campus or category, grow on hover/press, and the selected pin drops in with a bounce.
+- **Place card / panel** slides in, **follows your finger** when dragged (with a rubber-band and flick detection), springs between peek and full, and slides away when closed. On desktop the panel slides in from the left.
+- **Camera** glides with easing; long hops (campus ↔ UITH) arc and take longer.
+- **Route line** draws itself from start to end; switching route options redraws it.
+- **Small things:** menus/drawer/toast animate in *and out*, buttons and chips have springy press feedback, the search pill lifts on focus, the "you are here" dot pulses, switching map view dips instead of cutting, and Android phones give a tiny haptic tick on taps.
+- **Reduced motion:** if the phone's "reduce motion" setting is on, animations collapse to ~0 ms and the camera/route jump instantly.
