@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Unilorin Navigator backend - POI database + read-only API (DynamoDB, Lambda, API Gateway HTTP API) and an Amazon Location map with a referrer-restricted key.
+Description: Unilorin Navigator backend - POI database + API (DynamoDB, Lambda, API Gateway HTTP API), an opt-in walk-sharing endpoint, and an Amazon Location map with a referrer-restricted key.
 
 # Deploy (eu-north-1):
 #   aws cloudformation deploy --template-file infra/template.yaml --stack-name unilorin-nav --capabilities CAPABILITY_IAM \
@@ -89,7 +89,8 @@ Resources:
       ProtocolType: HTTP
       CorsConfiguration:
         AllowOrigins: [!Ref AllowedOrigin]
-        AllowMethods: [GET]
+        AllowMethods: [GET, POST]
+        AllowHeaders: [content-type]
         MaxAge: 3600
 
   PoiIntegration:
@@ -109,6 +110,7 @@ Resources:
 
   ApiStage:
     Type: AWS::ApiGatewayV2::Stage
+    DependsOn: [WalkRoute, WalkForgetRoute]   # the stage's per-route throttles name these routes, so they must exist first
     Properties:
       ApiId: !Ref HttpApi
       StageName: $default
@@ -116,6 +118,13 @@ Resources:
       DefaultRouteSettings:
         ThrottlingBurstLimit: 50
         ThrottlingRateLimit: 25
+      RouteSettings:   # the two write routes are throttled much harder than the read route
+        "POST /walks":
+          ThrottlingBurstLimit: 10
+          ThrottlingRateLimit: 5
+        "POST /walks/forget":
+          ThrottlingBurstLimit: 4
+          ThrottlingRateLimit: 2
 
   ApiInvokePermission:
     Type: AWS::Lambda::Permission
@@ -143,6 +152,122 @@ Resources:
         AllowResources: [!GetAtt LocationMap.Arn]
         AllowReferers: [!Ref AllowedReferer, "http://localhost:3000/*"]
 
+  # ---- Opt-in walk sharing: students who agree in the app upload GPS walks (anonymous random id, no name/phone/email) ----
+  WalkTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: owner
+          AttributeType: S
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: owner   # anonymous random id made on the phone; lets one person delete everything they shared
+          KeyType: HASH
+        - AttributeName: id
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: expires   # walks are deleted automatically after 12 months
+        Enabled: true
+
+  WalkFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+      Policies:
+        - PolicyName: WriteWalkTable
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: [dynamodb:PutItem, dynamodb:DeleteItem, dynamodb:Query]
+                Resource: !GetAtt WalkTable.Arn
+
+  WalkFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: nodejs24.x
+      Handler: index.handler
+      Role: !GetAtt WalkFunctionRole.Arn
+      Timeout: 10
+      MemorySize: 256
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref WalkTable
+      Code:
+        ZipFile: |
+          // POST /walks {owner,id,kind,label,dest,meters,ts,points}  -> save one shared walk (idempotent)
+          // POST /walks/forget {owner}                                -> delete everything that owner shared
+          const { DynamoDBClient, PutItemCommand, QueryCommand, DeleteItemCommand } = require("@aws-sdk/client-dynamodb");
+          const db = new DynamoDBClient({}), T = process.env.TABLE_NAME;
+          const out = (c, o) => ({ statusCode: c, headers: { "Content-Type": "application/json" }, body: JSON.stringify(o) });
+          const num = (v) => typeof v === "number" && isFinite(v);
+          const mine = (o, extra) => new QueryCommand({ TableName: T, KeyConditionExpression: "#o = :o", ExpressionAttributeNames: { "#o": "owner" }, ExpressionAttributeValues: { ":o": { S: o } }, ...extra });
+          exports.handler = async (e) => {
+            if ((e.body || "").length > 150000) return out(413, { error: "too large" });
+            let b; try { b = JSON.parse(e.body || "{}"); } catch { return out(400, { error: "bad json" }); }
+            if (!/^[0-9a-f-]{36}$/i.test(b.owner || "")) return out(400, { error: "owner" });
+            if (e.rawPath.endsWith("/forget")) {
+              let n = 0, k;
+              do { const q = await db.send(mine(b.owner, { ProjectionExpression: "#o, id", ExclusiveStartKey: k }));
+                for (const Key of q.Items) { await db.send(new DeleteItemCommand({ TableName: T, Key })); n++; }
+                k = q.LastEvaluatedKey; } while (k);
+              return out(200, { deleted: n });
+            }
+            const p = b.points;
+            if (!/^[0-9]{10,16}$/.test(b.id || "") || !/^[a-z0-9-]{1,60}$/.test(b.dest || "") || !["footpath", "road"].includes(b.kind) || !num(b.meters) || !(Date.parse(b.ts) > 0)) return out(400, { error: "fields" });
+            if (!Array.isArray(p) || p.length < 5 || p.length > 3000) return out(400, { error: "points" });
+            for (const c of p) if (!Array.isArray(c) || c.length !== 2 || !num(c[0]) || !num(c[1]) || c[0] < 4.4 || c[0] > 4.85 || c[1] < 8.3 || c[1] > 8.7) return out(400, { error: "outside Ilorin" });
+            const have = await db.send(mine(b.owner, { Select: "COUNT" }));
+            if (have.Count >= 200) return out(429, { error: "limit" });
+            try {
+              await db.send(new PutItemCommand({ TableName: T, ConditionExpression: "attribute_not_exists(id)", Item: {
+                owner: { S: b.owner }, id: { S: b.id }, kind: { S: b.kind }, dest: { S: b.dest }, meters: { N: String(Math.round(b.meters)) }, ts: { S: new Date(b.ts).toISOString() },
+                label: { S: String(b.label || "").replace(/[^\x20-\x7E]/g, "").slice(0, 120) }, points: { S: JSON.stringify(p.map((c) => [+c[0].toFixed(6), +c[1].toFixed(6)])) },
+                received: { S: new Date().toISOString() }, expires: { N: String(Math.floor(Date.now() / 1000) + 365 * 86400) } } }));
+            } catch (x) { if (x.name !== "ConditionalCheckFailedException") throw x; return out(200, { ok: true, duplicate: true }); }
+            return out(200, { ok: true });
+          };
+
+  WalkIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref HttpApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt WalkFunction.Arn
+      PayloadFormatVersion: "2.0"
+
+  WalkRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApi
+      RouteKey: POST /walks
+      Target: !Sub "integrations/${WalkIntegration}"
+
+  WalkForgetRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApi
+      RouteKey: POST /walks/forget
+      Target: !Sub "integrations/${WalkIntegration}"
+
+  WalkInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref WalkFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${HttpApi}/*/POST/walks*"
+
 Outputs:
   ApiUrl:
     Description: Build-time setting NEXT_PUBLIC_API_URL
@@ -156,3 +281,6 @@ Outputs:
   MapApiKeyName:
     Description: Key name - its value is read with Location DescribeKey and used as NEXT_PUBLIC_LOCATION_API_KEY
     Value: !Ref LocationApiKey
+  WalkTableName:
+    Description: DynamoDB table holding walks that students chose to share (read it with an admin profile, never from the website)
+    Value: !Ref WalkTable

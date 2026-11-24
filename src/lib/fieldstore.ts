@@ -1,6 +1,6 @@
 // Offline storage for the field collector: records/tracks in localStorage, photos in IndexedDB.
 export interface FieldRecord { key: string; name: string; category: string; campus: string; lat: number; lng: number; acc: number; note: string; ts: string; hasPhoto: boolean; custom?: boolean }
-export interface FieldTrack { id: string; from: string; to: string; label: string; kind: string; points: [number, number][]; ts: string; meters: number }
+export interface FieldTrack { id: string; from: string; to: string; label: string; kind: string; points: [number, number][]; ts: string; meters: number; uploaded?: boolean }
 export interface FieldState { collector: string; records: Record<string, FieldRecord>; tracks: FieldTrack[] }
 
 const LS = "unilorin-field-v1";

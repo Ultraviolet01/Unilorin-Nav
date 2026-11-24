@@ -8,6 +8,7 @@
 | Pins API | API Gateway HTTP API → Lambda → DynamoDB | `https://i9h6rn4lwh.execute-api.eu-north-1.amazonaws.com/pois` |
 | Pins database | DynamoDB (on-demand) | table from stack output `TableName` (30 pins) |
 | "Amazon Map" view | Amazon Location Service (HERE Explore style) + key restricted to map tiles, this map, this site | map `unilorin-nav-map`, key `unilorin-nav-web-key` |
+| Shared walks (opt-in) | API Gateway `POST /walks` and `POST /walks/forget` → Lambda → DynamoDB | table from stack output `WalkTableName`; see `docs/PRIVACY.md` |
 | Everything above except the website | one CloudFormation stack | `unilorin-nav` (`infra/template.yaml`) |
 
 Not used: S3 (photos are served by Amplify from `public/photos`), Cognito (no logins).
@@ -20,8 +21,16 @@ Other branches do not deploy. The four settings the build needs are stored in Am
 The app is a **static export**, so its Amplify platform must stay on *Web* (static), the server-rendered "Next.js (SSR)" mode fails with
 `Can't find required-server-files.json`.
 
+## Shared walks (opt-in)
+Students who tick **Save my walk** and choose **Share my walks** upload their GPS walks. The table holds a random code (made on the phone), the GPS points, time, length, kind and destination id. No name, phone or email. Rows delete themselves after 12 months (DynamoDB TTL on `expires`).
+- **This is the only public write path.** Protections: strict validation (area around Ilorin, size, formats), route throttles (5 req/s for `/walks`, 2 for `/walks/forget`), at most 200 walks per code, 150 KB body limit, CORS limited to the site, and a Lambda that can only write that one table.
+- **Anyone could still send junk.** Treat shared walks as untrusted: export them, look at them on a map, and only then merge (never automatically).
+- **Take them out for review:** `WALK_TABLE=<WalkTableName> AWS_PROFILE=unilorin node scripts/export-walks.mjs shared-walks.kml`, then `node scripts/walks-to-paths.mjs shared-walks.kml --dry`.
+- **Person asks to be deleted:** the app has "Stop sharing and delete my walks" (calls `/walks/forget`). Nothing else is needed.
+- **If a stack update ever fails with `UPDATE_ROLLBACK_FAILED`:** `ContinueUpdateRollback` (skip the stuck resource), fix the template, then deploy through a change set. (This happened once: the API stage named routes that did not exist yet; `DependsOn` now orders them.)
+
 ## What protects it
-- **API:** CORS allows only the website's address; rate limit 25 req/s (burst 50); the Lambda can only `Scan` its own table. No login, the data is public and read-only.
+- **API (read):** CORS allows only the website's address; rate limit 25 req/s (burst 50); the Lambda can only `Scan` its own table. No login, the data is public and read-only.
 - **Map key:** can only fetch tiles of *this* map, and only when the request comes from the website (or `localhost:3000` for development). It is visible in the site's JavaScript, that is normal for map keys; the restrictions are the protection.
 - Admin work is done with an IAM user (`Ultra`) with MFA, never the root user.
 

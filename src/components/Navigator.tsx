@@ -4,6 +4,7 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { type Category, type LL, type Mode, type Poi, type RouteOption, CAB_M_PER_MIN, WALK_M_PER_MIN, getRoutes, loadPois, routeMeters, searchPois } from "@/lib/pois";
 import { loadState, saveState, metersBetween } from "@/lib/fieldstore";
+import { CAN_UPLOAD, flushWalks, forgetWalks, getSharing, setSharing, type Sharing } from "@/lib/walkshare";
 import { minutesLeft, prepare, remainingLine, smoothHeading, snapToRoute, type Prepared } from "@/lib/nav";
 import { HAS_AWS_MAP, getMapStyle, type Base } from "@/lib/mapStyle";
 import { CAT, CHIP_ORDER, Icon, iconPath } from "./gm/icons";
@@ -69,7 +70,30 @@ export default function Navigator() {
   const [dir, setDir] = useState<Dir | null>(null);
   // live navigation ("Start"): follow the walker's GPS dot along the chosen route
   const [mode, setMode] = useState<Mode>("walk"), modeRef = useRef<Mode>("walk");
-  useEffect(() => { try { setSaveWalk(localStorage.getItem("unilorin-save-walk") === "1"); } catch { /* ignore */ } }, []);
+  useEffect(() => {
+    try { setSaveWalk(localStorage.getItem("unilorin-save-walk") === "1"); } catch { /* ignore */ }
+    setSharingState(getSharing()); void flushWalks(); // send walks recorded earlier (if the person chose to share)
+    const online = () => void flushWalks(); window.addEventListener("online", online); return () => window.removeEventListener("online", online);
+  }, []);
+  const rememberSave = (v: boolean) => { setSaveWalk(v); try { localStorage.setItem("unilorin-save-walk", v ? "1" : "0"); } catch { /* ignore */ } };
+  function onSaveToggle(checked: boolean) {
+    if (checked && getSharing() === null) { if (CAN_UPLOAD) { setConfirmDel(false); setConsentOpen(true); } else { setSharing("local"); setSharingState("local"); rememberSave(true); } return; } // first time: ask
+    rememberSave(checked);
+  }
+  function chooseSharing(c: "upload" | "local") {
+    setSharing(c); setSharingState(c); rememberSave(true); setConsentOpen(false); setConfirmDel(false);
+    if (c === "upload") void flushWalks();
+    setToast(c === "upload" ? "Thank you! Your walks will be shared with the map team." : "OK. Your walks stay on this phone.");
+  }
+  async function stopAndDelete() {
+    setBusy(true); const ok = await forgetWalks(); setBusy(false);
+    if (ok) { setSharingState("local"); setConsentOpen(false); setConfirmDel(false); setToast("Sharing is off and everything you shared was deleted."); }
+    else setToast("Couldn't reach the server. Try again when you are online.");
+  }
+  function walkSavedMsg() {
+    if (getSharing() === "upload") void flushWalks().then((n) => setToast(n > 0 ? "Thank you! Your walk was shared with the map team." : "Your walk is saved. It will be shared when you are online."));
+    else setToast("Your walk is saved on this phone. Open the Field page to share it with the team.");
+  }
   const [nav, setNav] = useState<{ dest: Poi; mode: Mode } | null>(null), [following, setFollowing] = useState(true);
   const [navInfo, setNavInfo] = useState({ remain: 0, minutes: 0, arrive: "", arrived: false, wait: true, off: false });
   const navWatch = useRef<number | null>(null), navMarker = useRef<maplibregl.Marker | null>(null), navRoute = useRef<Prepared | null>(null), navDest = useRef<Poi | null>(null);
@@ -77,6 +101,7 @@ export default function Navigator() {
   const wake = useRef<{ release: () => Promise<void> } | null>(null);
   // "Save my walk": GPS fixes kept on this phone (never uploaded) in the same store the /field collector exports
   const [saveWalk, setSaveWalk] = useState(false), [recording, setRecording] = useState(false);
+  const [sharing, setSharingState] = useState<Sharing>(null), [consentOpen, setConsentOpen] = useState(false), [confirmDel, setConfirmDel] = useState(false), [busy, setBusy] = useState(false);
   const recPts = useRef<[number, number][]>([]), recId = useRef(""), recLabel = useRef(""), recKind = useRef("footpath"), recDest = useRef("");
   const [travel, setTravel] = useState(false), [drawer, setDrawer] = useState(false), [campusMenu, setCampusMenu] = useState(false), [layerMenu, setLayerMenu] = useState(false);
   const [locOn, setLocOn] = useState(false), [locFix, setLocFix] = useState(false), [toast, setToast] = useState<string | null>(null), [zoomed, setZoomed] = useState(false), [dragY, setDragY] = useState<number | null>(null);
@@ -366,7 +391,7 @@ export default function Navigator() {
   }
   function arrive() {
     arrivedRef.current = true;
-    if (flushWalk(true)) { setRecording(false); setToast("Your walk is saved on this phone. Open the Field page to share it with the team."); }
+    if (flushWalk(true)) { setRecording(false); walkSavedMsg(); }
     if (navWatch.current !== null) { navigator.geolocation.clearWatch(navWatch.current); navWatch.current = null; }
     const d = navDest.current; if (d) moveNavDot([d.lng, d.lat], navHeading.current);
     setRouteData(null, []); setNavInfo((i) => ({ ...i, remain: 0, minutes: 0, arrived: true, wait: false, off: false }));
@@ -392,7 +417,7 @@ export default function Navigator() {
     }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 60000 });
   }
   function exitNav(toOverview = true) {
-    if (flushWalk(true)) setToast("Your walk is saved on this phone. Open the Field page to share it with the team.");
+    if (flushWalk(true)) walkSavedMsg();
     recId.current = ""; setRecording(false);
     if (navWatch.current !== null) { navigator.geolocation.clearWatch(navWatch.current); navWatch.current = null; }
     cancelAnimationFrame(navAnim.current); navMarker.current?.remove(); navMarker.current = null;
@@ -563,7 +588,8 @@ export default function Navigator() {
                     <span className="gm-rl">{r.label}{r.custom ? "" : r.traced ? " · traced from satellite" : " · straight-line estimate"}</span></span>
                 </button>))}
               <div className="gm-pad gm-startrow">
-                <label className="gm-rec"><input type="checkbox" checked={saveWalk} onChange={(e) => { setSaveWalk(e.target.checked); try { localStorage.setItem("unilorin-save-walk", e.target.checked ? "1" : "0"); } catch { /* ignore */ } }} /><span><b>Save my walk to improve the map</b><small>Kept on this phone. Nothing is uploaded until you share it.</small></span></label>
+                <label className="gm-rec"><input type="checkbox" checked={saveWalk} onChange={(e) => onSaveToggle(e.target.checked)} /><span><b>Save my walk to improve the map</b><small>{sharing === "upload" ? "Shared with the map team, anonymously." : sharing === "local" ? "Kept on this phone only." : "You will be asked how it is used."}</small></span></label>
+                {sharing && CAN_UPLOAD && <button className="gm-rec-link" onClick={() => { setConfirmDel(false); setConsentOpen(true); }}>Change walk sharing</button>}
                 <button className="gm-startbtn" onClick={startNav}><Icon name="navigate" size={20} color="#fff" /> Start</button></div>
               <p className="gm-fine">{sdir.routes[0].mode === "cab" ? "A cab stays on the roads, so you may be dropped at the nearest road and walk the last bit. Agree the fare with the driver before you get in." : sdir.routes[0].traced || !sdir.routes[0].custom ? "Footpaths are traced from satellite images and not yet walked, allow a little extra time." : "Walked and recorded by the Unilorin Navigator team."}</p>
             </>)}
@@ -598,6 +624,33 @@ export default function Navigator() {
           <p className="gm-fine">Map data © OpenStreetMap contributors. Icons: Material Icons (Apache-2.0).</p>
         </aside></>)}</Presence>
 
+      {consentOpen && (
+        <div className="gm-scrim2" onClick={() => { setConsentOpen(false); setConfirmDel(false); }}>
+          <div className="gm-dialog" role="dialog" aria-modal="true" aria-labelledby="walk-consent-title" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => { if (e.key === "Escape") { setConsentOpen(false); setConfirmDel(false); } }}>
+            <h2 id="walk-consent-title">Help improve the Unilorin map</h2>
+            <p>When you use <b>Start</b>, the app can save the path your phone follows. The team uses real walks to add paths that are missing from the map.</p>
+            <div className="gm-dl"><b>What is saved</b><ul><li>The GPS points of that walk, the time, and where you were going.</li><li>A random code made on your phone. <u>Not</u> your name, number or email.</li></ul></div>
+            <div className="gm-dl"><b>What is not</b><ul><li>Nothing is saved or sent when you are not using Start.</li><li>You are never identified or contacted.</li></ul></div>
+            <div className="gm-dl"><b>Your control</b><ul><li>Only the map team can see shared walks. They are deleted automatically after 12 months.</li><li>You can stop and delete everything you shared, from this same screen.</li></ul></div>
+            {confirmDel ? (
+              <div className="gm-dact">
+                <p className="gm-dwarn">Delete every walk you have shared and stop sharing?</p>
+                <button className="gm-dbtn danger" disabled={busy} onClick={stopAndDelete}>{busy ? "Deleting…" : "Yes, delete and stop"}</button>
+                <button className="gm-dbtn ghost" disabled={busy} onClick={() => setConfirmDel(false)}>Cancel</button>
+              </div>
+            ) : (
+              <div className="gm-dact">
+                {sharing !== "upload" && <button className="gm-dbtn primary" autoFocus onClick={() => chooseSharing("upload")}>Share my walks</button>}
+                {sharing === "upload" && <button className="gm-dbtn primary" autoFocus onClick={() => setConsentOpen(false)}>Keep sharing</button>}
+                {sharing !== "local" && sharing !== "upload" && <button className="gm-dbtn secondary" onClick={() => chooseSharing("local")}>Keep on my phone only</button>}
+                {sharing === "upload" && <button className="gm-dbtn danger" onClick={() => setConfirmDel(true)}>Stop sharing and delete my walks</button>}
+                {sharing === "local" && <button className="gm-dbtn secondary" onClick={() => chooseSharing("upload")}>Share my walks</button>}
+                {sharing === null && <button className="gm-dbtn ghost" onClick={() => setConsentOpen(false)}>Not now</button>}
+                {sharing !== null && sharing !== "upload" && <button className="gm-dbtn ghost" onClick={() => setConsentOpen(false)}>Close</button>}
+              </div>
+            )}
+          </div>
+        </div>)}
       {nav && (
         <div className="gm-navbar">
           <button className="gm-navx" onClick={() => (navInfo.arrived ? finishNav() : exitNav())}>{navInfo.arrived ? "Done" : "Exit"}</button>

@@ -103,12 +103,12 @@ loaded and keeps everything on the phone until exported.
 
 ## Walked paths (GPS recordings)
 Better than tracing from satellite: real walks.
-1. In the app, set a route, tick **Save my walk to improve the map**, press **Start** and walk (or ride) it. The track stays on the phone; nothing is uploaded.
-2. Open the Field page (`/field`), **Export**, and share `footpaths.kml` with the team.
+1. In the app, set a route, tick **Save my walk to improve the map**, press **Start** and walk (or ride) it. The first time, a pop-up asks whether to **Share my walks** (uploads automatically, anonymously) or **Keep on my phone only**.
+2. Get the walks: shared ones with `WALK_TABLE=<WalkTableName> AWS_PROFILE=unilorin node scripts/export-walks.mjs shared-walks.kml`; ones kept on a phone from the Field page (`/field`) **Export** (`footpaths.kml`). Shared walks are untrusted: look at them on a map first.
 3. Merge it into the walking network (`--dry` first to preview):
    ```bash
-   node scripts/walks-to-paths.mjs footpaths.kml --dry
-   node scripts/walks-to-paths.mjs footpaths.kml
+   node scripts/walks-to-paths.mjs shared-walks.kml --dry
+   node scripts/walks-to-paths.mjs shared-walks.kml
    ```
    Walks under 2 m apart are thinned, lines are simplified to 2.5 m, and each walk is joined to the existing network (shared vertices and new junctions within 6 m), so routes can pass through it. Paths marked `"walked": true` replace guesswork; delete the traced path they supersede from `data/paths.json`.
 4. See `data/paths-to-verify.csv` for the traced paths to walk first.

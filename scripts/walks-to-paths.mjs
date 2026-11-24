@@ -6,10 +6,6 @@
 // then appends it as a "walked" path. Routes can only pass between paths at shared vertices, so the junctions matter.
 import { readFileSync, writeFileSync } from "node:fs";
 
-const args = process.argv.slice(2), dry = args.includes("--dry"), files = args.filter((a) => !a.startsWith("--"));
-const [input, pathsFile = "data/paths.json"] = files;
-if (!input) { console.error("Usage: node scripts/walks-to-paths.mjs <footpaths.kml> [paths.json] [--dry]"); process.exit(1); }
-
 const KY = 110574, kx = (lat) => 111320 * Math.cos((lat * Math.PI) / 180);
 const dist = (a, b) => Math.hypot((a[0] - b[0]) * kx((a[1] + b[1]) / 2), (a[1] - b[1]) * KY);
 const r6 = (c) => [Math.round(c[0] * 1e6) / 1e6, Math.round(c[1] * 1e6) / 1e6];
@@ -67,6 +63,9 @@ export function readWalks(kml) {
 }
 
 function main() {
+  const args = process.argv.slice(2), dry = args.includes("--dry"), files = args.filter((a) => !a.startsWith("--"));
+  const [input, pathsFile = "data/paths.json"] = files;
+  if (!input) { console.error("Usage: node scripts/walks-to-paths.mjs <footpaths.kml> [paths.json] [--dry]"); process.exit(1); }
   const data = JSON.parse(readFileSync(pathsFile, "utf8")), walks = readWalks(readFileSync(input, "utf8"));
   if (!walks.length) { console.log('No recorded walks found (placemarks named "walk > ... | ... | ...").'); return; }
   let added = 0, metres = 0, snappedAll = 0, junctionsAll = 0;
