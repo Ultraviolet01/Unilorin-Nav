@@ -1,6 +1,6 @@
 # Unilorin Navigator (Unilorin Nav)
 
-A Google-Maps-style campus navigation app for University of Ilorin students, installable as a phone app (PWA). It covers the **Main Campus** and the **UITH & Colleges** (teaching hospital, Old and New College) as two separate tabs. Built for the AWS SBG Pitch-A-Thon.
+A campus navigation app for University of Ilorin students, installable as a phone app (PWA). It covers the **Main Campus** and the **UITH & Colleges** (teaching hospital, Old and New College) as two separate tabs. Built for the AWS SBG Pitch-A-Thon.
 
 **Live:** https://main.d3dk1xzoo5ual9.amplifyapp.com (auto-published from the `main` branch)
 
