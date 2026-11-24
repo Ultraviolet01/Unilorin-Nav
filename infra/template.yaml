@@ -1,16 +1,18 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Transform: AWS::Serverless-2016-10-31
-Description: Unilorin Navigator backend - POI database + API (DynamoDB, Lambda, API Gateway HTTP API) and an Amazon Location map with a referrer-restricted key.
+Description: Unilorin Navigator backend - POI database + read-only API (DynamoDB, Lambda, API Gateway HTTP API) and an Amazon Location map with a referrer-restricted key.
+
+# Deploy (eu-north-1):
+#   aws cloudformation deploy --template-file infra/template.yaml --stack-name unilorin-nav --capabilities CAPABILITY_IAM \
+#     --parameter-overrides AllowedOrigin=https://<your-site> AllowedReferer=https://<your-site>/*
+# Delete everything again:  aws cloudformation delete-stack --stack-name unilorin-nav
 
 Parameters:
   AllowedOrigin:
     Type: String
-    Default: "*"
-    Description: Website origin allowed to call the API (CORS), e.g. https://main.d1abc.amplifyapp.com - use "*" only while testing.
+    Description: Website origin allowed to call the API (CORS), e.g. https://main.d1abc.amplifyapp.com
   AllowedReferer:
     Type: String
-    Default: "https://*.amplifyapp.com/*"
-    Description: Referrer pattern allowed to use the map key. Use your site URL once you have a custom domain.
+    Description: Referrer pattern allowed to use the map key, e.g. https://main.d1abc.amplifyapp.com/*
   MapStyle:
     Type: String
     Default: VectorHereExplore
@@ -29,35 +31,99 @@ Resources:
         - AttributeName: id
           KeyType: HASH
 
-  HttpApi:
-    Type: AWS::Serverless::HttpApi
+  PoiFunctionRole:
+    Type: AWS::IAM::Role
     Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+      Policies:
+        - PolicyName: ReadPoiTable
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: dynamodb:Scan
+                Resource: !GetAtt PoiTable.Arn
+
+  PoiFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: nodejs24.x
+      Handler: index.handler
+      Role: !GetAtt PoiFunctionRole.Arn
+      Timeout: 10
+      MemorySize: 256
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref PoiTable
+      Code:
+        ZipFile: |
+          // GET /pois?category=&campus=  -> all pins (small table, so a Scan is fine)
+          const { DynamoDBClient, ScanCommand } = require("@aws-sdk/client-dynamodb");
+          const db = new DynamoDBClient({});
+          const un = (v) => v.S !== undefined ? v.S : v.N !== undefined ? Number(v.N) : v.BOOL !== undefined ? v.BOOL
+            : v.L ? v.L.map(un) : v.M ? Object.fromEntries(Object.entries(v.M).map(([k, x]) => [k, un(x)])) : null;
+          exports.handler = async (event) => {
+            const q = event.queryStringParameters || {};
+            const items = []; let key;
+            do {
+              const r = await db.send(new ScanCommand({ TableName: process.env.TABLE_NAME, ExclusiveStartKey: key }));
+              items.push(...(r.Items || []).map((i) => Object.fromEntries(Object.entries(i).map(([k, v]) => [k, un(v)]))));
+              key = r.LastEvaluatedKey;
+            } while (key);
+            const out = items.filter((p) => (!q.category || p.category === q.category) && (!q.campus || p.campus === q.campus));
+            return { statusCode: 200, headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=300" }, body: JSON.stringify(out) };
+          };
+
+  HttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub "${AWS::StackName}-api"
+      ProtocolType: HTTP
       CorsConfiguration:
         AllowOrigins: [!Ref AllowedOrigin]
         AllowMethods: [GET]
         MaxAge: 3600
 
-  PoiFunction:
-    Type: AWS::Serverless::Function
+  PoiIntegration:
+    Type: AWS::ApiGatewayV2::Integration
     Properties:
-      CodeUri: ../lambda/getPOIs/
-      Handler: index.handler
-      Runtime: nodejs24.x
-      MemorySize: 256
-      Timeout: 10
-      Environment:
-        Variables:
-          TABLE_NAME: !Ref PoiTable
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref PoiTable
-      Events:
-        GetPois:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /pois
-            Method: GET
+      ApiId: !Ref HttpApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt PoiFunction.Arn
+      PayloadFormatVersion: "2.0"
+
+  PoiRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApi
+      RouteKey: GET /pois
+      Target: !Sub "integrations/${PoiIntegration}"
+
+  ApiStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref HttpApi
+      StageName: $default
+      AutoDeploy: true
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 50
+        ThrottlingRateLimit: 25
+
+  ApiInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref PoiFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${HttpApi}/*/GET/pois"
 
   LocationMap:
     Type: AWS::Location::Map
@@ -78,14 +144,14 @@ Resources:
 
 Outputs:
   ApiUrl:
-    Description: Put this in Amplify as NEXT_PUBLIC_API_URL
+    Description: Build-time setting NEXT_PUBLIC_API_URL
     Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}"
   TableName:
-    Description: DynamoDB table - load the pins with TABLE_NAME=<this> npm run import-pois
+    Description: DynamoDB table holding the pins
     Value: !Ref PoiTable
   MapName:
-    Description: Put this in Amplify as NEXT_PUBLIC_LOCATION_MAP_NAME
+    Description: Build-time setting NEXT_PUBLIC_LOCATION_MAP_NAME
     Value: !Ref LocationMap
   MapApiKeyName:
-    Description: "Get the key value with: aws location describe-key --key-name <this> --query Key --output text  (then put it in Amplify as NEXT_PUBLIC_LOCATION_API_KEY)"
+    Description: Key name - its value is read with Location DescribeKey and used as NEXT_PUBLIC_LOCATION_API_KEY
     Value: !Ref LocationApiKey

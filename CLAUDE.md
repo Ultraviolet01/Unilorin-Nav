@@ -1,3 +1,9 @@
+# Project settings (these override the AWS block below)
+
+- **AWS help_level: HIGH** — chosen by the user. Explain each step and why before running it, suggest better options when they exist, flag best practices and trade-offs, and still do what the user decides.
+- AWS profile for the CLI/MCP: `unilorin` (IAM user, region `eu-north-1`). Never use the root user.
+- Commits must be authored only by `ultraviolet01 <ultravioletadewale@gmail.com>`; no co-author trailers.
+
 <!-- BEGIN AWS Agent Toolkit rules -->
 # AWS Guidance for the new AWS experience
 
