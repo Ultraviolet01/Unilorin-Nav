@@ -127,7 +127,7 @@ Sources: pins from OpenStreetMap and Google Maps listings shared by the team; pa
 
 ## AWS
 
-Everything is deployed and documented in **`docs/AWS-SETUP.md`** (addresses, how to redeploy, what protects it, how to remove it all). In short:
+Everything is deployed and documented in **`docs/AWS-SETUP.md`** (addresses, how to redeploy, what protects it, how to remove it all). **`docs/AWS-USAGE.md`** is the evidence page: every AWS service we use, the exact code lines that use it, and a live snapshot of the resources taken from AWS itself. In short:
 
 - Push to `main`: Amplify builds and publishes the site in about 2 to 3 minutes. Other branches do not deploy.
 - Backend changes: edit `infra/template.yaml`, run `cfn-lint`, deploy through a CloudFormation change set.
