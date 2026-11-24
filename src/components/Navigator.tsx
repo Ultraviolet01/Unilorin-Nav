@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { type Category, type LL, type Poi, type RouteOption, getRoutes, loadPois, routeMeters, searchPois } from "@/lib/pois";
+import { minutesLeft, prepare, remainingLine, smoothHeading, snapToRoute, type Prepared } from "@/lib/nav";
 import { HAS_AWS_MAP, getMapStyle, type Base } from "@/lib/mapStyle";
 import { CAT, CHIP_ORDER, Icon, iconPath } from "./gm/icons";
 import buildings from "../../data/buildings.json";
@@ -65,6 +66,12 @@ export default function Navigator() {
   const [cat, setCat] = useState<Category | null>(null);
   const [selected, setSelected] = useState<Poi | null>(null), [full, setFull] = useState(false);
   const [dir, setDir] = useState<Dir | null>(null);
+  // live navigation ("Start"): follow the walker's GPS dot along the chosen route
+  const [nav, setNav] = useState<{ dest: Poi } | null>(null), [following, setFollowing] = useState(true);
+  const [navInfo, setNavInfo] = useState({ remain: 0, minutes: 0, arrive: "", arrived: false, wait: true, off: false });
+  const navWatch = useRef<number | null>(null), navMarker = useRef<maplibregl.Marker | null>(null), navRoute = useRef<Prepared | null>(null), navDest = useRef<Poi | null>(null);
+  const navFollow = useRef(true), offCount = useRef(0), navHeading = useRef(0), firstFix = useRef(true), arrivedRef = useRef(false), rerouting = useRef(false), navAnim = useRef(0);
+  const wake = useRef<{ release: () => Promise<void> } | null>(null);
   const [travel, setTravel] = useState(false), [drawer, setDrawer] = useState(false), [campusMenu, setCampusMenu] = useState(false), [layerMenu, setLayerMenu] = useState(false);
   const [locOn, setLocOn] = useState(false), [locFix, setLocFix] = useState(false), [toast, setToast] = useState<string | null>(null), [zoomed, setZoomed] = useState(false), [dragY, setDragY] = useState<number | null>(null);
 
@@ -135,10 +142,11 @@ export default function Navigator() {
     // If the Amazon map can't be loaded (outage, bad key, offline) fall back to the standard map instead of leaving a blank screen.
     m.on("error", () => { if (awaiting.current && baseRef.current === "aws") { awaiting.current = false; setToast("Amazon Map isn't available right now, showing the standard map instead."); skipSave.current = true; setBase("map"); } });
     m.on("zoom", () => setZoomed(m.getZoom() >= 16));
+    m.on("dragstart", () => { if (navWatch.current !== null) { navFollow.current = false; setFollowing(false); } }); // the walker looked around: stop auto-following
     m.on("click", (e) => { if (!(e.originalEvent.target as HTMLElement).closest(".gm-poi")) { setLayerMenu(false); setCampusMenu(false); } });
     map.current = m;
     if (location.search.includes("debug")) (window as unknown as { __map?: maplibregl.Map }).__map = m; // test hook, only with ?debug
-    return () => m.remove();
+    return () => { if (navWatch.current !== null) navigator.geolocation.clearWatch(navWatch.current); cancelAnimationFrame(navAnim.current); m.remove(); };
   }, []);
   const baseTouched = useRef(false);
   useEffect(() => {
@@ -270,7 +278,7 @@ export default function Navigator() {
     // keep the route clear of the top card (measured) and the bottom sheet, like Google does
     const h = el.current?.clientHeight ?? 700, mapTop = el.current?.getBoundingClientRect().top ?? 0;
     const bar = document.querySelector(".gm-dir")?.getBoundingClientRect();
-    const top = bar ? Math.max(120, bar.bottom - mapTop + 14) : 170, bottom = Math.min(340, Math.max(240, Math.round(h * 0.33) + 46)); /* sheet + the height of the destination pin */
+    const top = bar ? Math.max(120, bar.bottom - mapTop + 14) : 170, bottom = Math.min(380, Math.max(270, Math.round(h * 0.42) + 30)); /* route sheet incl. the Start button + the height of the destination pin */
     m.fitBounds(b, { padding: isDesktop() ? { left: 460, top: 100, right: 100, bottom: 100 } : { top, bottom, left: 44, right: 44 }, maxZoom: 18, ...camera() });
   }
   function compute(dest: Poi, start: Start, active = 0) {
@@ -290,12 +298,87 @@ export default function Navigator() {
     }, () => done(null), { enableHighAccuracy: true, timeout: 6000, maximumAge: 15000 });
   }
   function closeDirections() { setDir(null); clearRoute(); }
+
+  // ---------- live navigation ----------
+  const arriveClock = (min: number) => new Date(Date.now() + min * 60000).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  function moveNavDot(to: [number, number], heading: number) {
+    const m = map.current; if (!m) return;
+    if (!navMarker.current) { const d = document.createElement("div"); d.className = "gm-me nav"; d.innerHTML = '<i class="gm-cone"></i>'; navMarker.current = new maplibregl.Marker({ element: d }).setLngLat(to).addTo(m); }
+    const mk = navMarker.current; mk.getElement().style.setProperty("--hd", `${heading - m.getBearing()}deg`);
+    const f = mk.getLngLat(), from: [number, number] = [f.lng, f.lat]; cancelAnimationFrame(navAnim.current);
+    if (reduced() || (from[0] === to[0] && from[1] === to[1])) { mk.setLngLat(to); return; }
+    const t0 = performance.now(), D = 700; // glide between GPS fixes so the dot moves smoothly like Google's
+    const step = (now: number) => { const t = Math.min(1, (now - t0) / D); mk.setLngLat([from[0] + (to[0] - from[0]) * t, from[1] + (to[1] - from[1]) * t]); if (t < 1) navAnim.current = requestAnimationFrame(step); };
+    navAnim.current = requestAnimationFrame(step);
+  }
+  function reroute(from: [number, number]) {
+    const dest = navDest.current; if (!dest || rerouting.current) return; rerouting.current = true;
+    const start: Start = { id: "gps", name: "Your location", lat: from[1], lng: from[0] };
+    const rs = getRoutes(start, dest);
+    navRoute.current = prepare(rs[0].coordinates); setRouteData(rs[0].coordinates, []); offCount.current = 0;
+    setDir((d) => (d ? { ...d, start, routes: rs, active: 0 } : d));
+    setToast(rs[0].kind === "estimate" ? "You are away from the mapped paths, so this is a straight line to the destination." : "Route updated from where you are.");
+    rerouting.current = false;
+  }
+  function onNavFix(p: GeolocationPosition) {
+    const r = navRoute.current, m = map.current; if (!r || !m || arrivedRef.current) return;
+    const raw: [number, number] = [p.coords.longitude, p.coords.latitude], acc = p.coords.accuracy || 20;
+    const s = snapToRoute(r, raw), onRoute = s.offM <= Math.max(35, acc);
+    const shown: [number, number] = onRoute ? s.point : raw;
+    const moving = typeof p.coords.heading === "number" && !Number.isNaN(p.coords.heading) && (p.coords.speed ?? 0) > 0.6;
+    navHeading.current = firstFix.current ? s.bearing : smoothHeading(navHeading.current, moving ? p.coords.heading! : s.bearing);
+    const remain = onRoute ? s.remaining : s.remaining + s.offM, min = minutesLeft(remain);
+    if (!onRoute) {
+      offCount.current += firstFix.current ? 3 : 1; // the very first fix is judged at once, later ones need 3 in a row
+      if (offCount.current >= 3 && acc <= 80) { firstFix.current = false; reroute(raw); }
+    } else { offCount.current = 0; setRouteData(remainingLine(r, s), []); }
+    moveNavDot(shown, navHeading.current);
+    setNavInfo({ remain, minutes: min, arrive: arriveClock(min), arrived: false, wait: false, off: !onRoute });
+    if (onRoute && s.remaining <= 20) { arrive(); return; }
+    if (navFollow.current) m.easeTo({ center: shown, zoom: Math.max(m.getZoom(), 17.5), bearing: navHeading.current, offset: [0, Math.round((m.getContainer().clientHeight || 600) * 0.16)], duration: reduced() ? 0 : 900, essential: true });
+    firstFix.current = false;
+  }
+  function arrive() {
+    arrivedRef.current = true;
+    if (navWatch.current !== null) { navigator.geolocation.clearWatch(navWatch.current); navWatch.current = null; }
+    const d = navDest.current; if (d) moveNavDot([d.lng, d.lat], navHeading.current);
+    setRouteData(null, []); setNavInfo((i) => ({ ...i, remain: 0, minutes: 0, arrived: true, wait: false, off: false }));
+    try { navigator.vibrate?.([120, 60, 120]); } catch { /* not supported */ }
+    map.current?.easeTo({ center: d ? [d.lng, d.lat] : map.current.getCenter(), zoom: 18, bearing: 0, duration: reduced() ? 0 : 800, essential: true });
+  }
+  function startNav() {
+    if (!dir || !dir.routes.length) return;
+    if (!navigator.geolocation) { setToast("Location is not available on this device."); return; }
+    tap();
+    if (watchId.current !== null) { navigator.geolocation.clearWatch(watchId.current); watchId.current = null; } // navigation does its own tracking
+    meMarker.current?.remove(); meMarker.current = null; setLocOn(false); setLocFix(false);
+    const r = prepare(dir.routes[dir.active].coordinates);
+    navRoute.current = r; navDest.current = dir.dest; navFollow.current = true; offCount.current = 0; firstFix.current = true; arrivedRef.current = false; setFollowing(true);
+    setNav({ dest: dir.dest }); setNavInfo({ remain: r.total, minutes: minutesLeft(r.total), arrive: arriveClock(minutesLeft(r.total)), arrived: false, wait: true, off: false });
+    try { (navigator as unknown as { wakeLock?: { request: (t: string) => Promise<{ release: () => Promise<void> }> } }).wakeLock?.request("screen").then((l) => { wake.current = l; }).catch(() => {}); } catch { /* optional */ }
+    navWatch.current = navigator.geolocation.watchPosition(onNavFix, (e) => {
+      if (e.code === 1) { setToast("Allow location access to navigate."); exitNav(); }
+      else if (firstFix.current) setToast("Waiting for a GPS signal…"); // only while we have never had a fix; a resting phone may pause updates
+    }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 60000 });
+  }
+  function exitNav(toOverview = true) {
+    if (navWatch.current !== null) { navigator.geolocation.clearWatch(navWatch.current); navWatch.current = null; }
+    cancelAnimationFrame(navAnim.current); navMarker.current?.remove(); navMarker.current = null;
+    wake.current?.release().catch(() => {}); wake.current = null;
+    navRoute.current = null; navDest.current = null; arrivedRef.current = false;
+    setNav(null); setFollowing(true);
+    const m = map.current; m?.easeTo({ bearing: 0, pitch: 0, duration: reduced() ? 0 : 600 });
+    if (toOverview && dir) show(dir.routes, dir.active); // back to the whole-route view
+  }
+  function finishNav() { const d = nav?.dest; exitNav(false); closeDirections(); if (d) setSelected(d); }
+  function recenter() { tap(); navFollow.current = true; setFollowing(true); const p = navMarker.current?.getLngLat(), m = map.current; if (p && m) m.easeTo({ center: p, zoom: Math.max(m.getZoom(), 17.5), bearing: navHeading.current, offset: [0, Math.round((m.getContainer().clientHeight || 600) * 0.16)], duration: reduced() ? 0 : 700, essential: true }); }
+  useEffect(() => { if (!dir && nav) exitNav(false); }, [dir]); // leaving directions (tab switch, back) ends navigation
   function swap() { if (!dir?.start || dir.start.id === "gps") return; const s = tabPois.find((p) => p.id === dir.start!.id); if (!s) return; setSelected(s); compute(s, { id: dir.dest.id, name: dir.dest.name, lat: dir.dest.lat, lng: dir.dest.lng }); }
   const startOptions = useMemo(() => (dir ? tabPois.filter((p) => p.id !== dir.dest.id && p.name.toLowerCase().includes(dir.sq.trim().toLowerCase())).slice(0, 8) : []), [dir?.sq, dir?.dest.id, tabPois]);
 
   // ---------- sheet: drag, snapshot (kept so it can animate out), share ----------
   const listView = !!cat && !selected && !dir && !travel;
-  const view = travel ? "travel" : dir ? "dir" : selected ? "place" : listView ? "list" : null;
+  const view = nav ? null : travel ? "travel" : dir ? "dir" : selected ? "place" : listView ? "list" : null;
   const snap = useRef<{ view: "travel" | "dir" | "place" | "list"; selected: Poi | null; dir: Dir | null; cat: Category | null } | null>(null);
   if (view) snap.current = { view, selected, dir, cat };
   const S = view ? { view, selected, dir, cat } : snap.current; // while closing, keep showing the last content
@@ -328,13 +411,22 @@ export default function Navigator() {
   const sheetClass = !S ? "" : S.view === "place" ? (full ? "full" : "") : S.view === "list" ? "full list" : S.view === "dir" ? "full dirs" : "full travel";
 
   return (
-    <div className={`gm ${base === "sat" ? "sat" : ""} ${base === "dark" ? "dark" : ""} ${view ? "has-sheet" : ""}`}>
+    <div className={`gm ${base === "sat" ? "sat" : ""} ${base === "dark" ? "dark" : ""} ${view ? "has-sheet" : ""} ${nav ? "navigating" : ""}`}>
       <div ref={el} className={`gm-map ${zoomed ? "z16" : ""}`} />
       <div className="gm-panelbg" />
 
       {/* ---- top: search pill or directions card ---- */}
       <div className="gm-top">
-        {!dir ? (<>
+        {nav ? (
+          <div className={`gm-navtop ${navInfo.arrived ? "done" : ""}`} role="status" aria-live="polite">
+            <Icon name={navInfo.arrived ? "place" : "navigate"} size={30} color="#fff" />
+            <div className="gm-navtxt">
+              <small>{navInfo.arrived ? "You have arrived" : navInfo.wait ? "Finding your location…" : navInfo.off ? "Away from the path" : "Follow the blue line"}</small>
+              <b>{navInfo.arrived ? nav.dest.name : `Walk to ${nav.dest.name}`}</b>
+            </div>
+            {!navInfo.arrived && !navInfo.wait && <span className="gm-navdist">{fmtDist(navInfo.remain)}</span>}
+          </div>
+        ) : !dir ? (<>
           <div className="gm-search">
             <button className="gm-iconbtn" aria-label="Menu" onClick={() => { setDrawer(true); tap(); }}><Icon name="menu" /></button>
             <input value={q} placeholder={CAMPUS[tab].hint} aria-label="Search" onChange={(e) => setQ(e.target.value)} onFocus={() => setFocus(true)} onBlur={() => setFocus(false)} onKeyDown={(e) => e.key === "Enter" && onEnter()} />
@@ -436,6 +528,7 @@ export default function Navigator() {
                   <span className="gm-rinfo"><b>{r.walkMinutes} min</b> <small>({fmtDist(routeMeters(r.coordinates))})</small>
                     <span className="gm-rl">{r.label}{r.custom ? "" : r.traced ? " · traced from satellite" : " · straight-line estimate"}</span></span>
                 </button>))}
+              <div className="gm-pad gm-startrow"><button className="gm-startbtn" onClick={startNav}><Icon name="navigate" size={20} color="#fff" /> Start</button></div>
               <p className="gm-fine">{sdir.routes[0].traced || !sdir.routes[0].custom ? "Footpaths are traced from satellite images and not yet walked, allow a little extra time." : "Walked and recorded by the Unilorin Navigator team."}</p>
             </>)}
 
@@ -469,6 +562,12 @@ export default function Navigator() {
           <p className="gm-fine">Map data © OpenStreetMap contributors. Icons: Material Icons (Apache-2.0).</p>
         </aside></>)}</Presence>
 
+      {nav && (
+        <div className="gm-navbar">
+          <button className="gm-navx" onClick={() => (navInfo.arrived ? finishNav() : exitNav())}>{navInfo.arrived ? "Done" : "Exit"}</button>
+          <div className="gm-navstats">{navInfo.arrived ? <b>You are at {nav.dest.name}</b> : navInfo.wait ? <b>Finding your location…</b> : <><b>{navInfo.minutes} min</b><span>{fmtDist(navInfo.remain)} · arrive {navInfo.arrive}</span></>}</div>
+        </div>)}
+      {nav && !following && !navInfo.arrived && <button className="gm-recenter" onClick={recenter}><Icon name="navigate" size={18} color="#1a73e8" /> Re-center</button>}
       <Presence open={!!toast} ms={240}>{(closing) => (
         <div className={`gm-toast ${sheetUp ? "up" : ""} ${closing ? "out" : ""}`} role="status"><span>{lastToast.current}</span><button onClick={() => setToast(null)}>Dismiss</button></div>)}</Presence>
     </div>
