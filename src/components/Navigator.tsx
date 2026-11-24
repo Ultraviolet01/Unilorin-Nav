@@ -588,7 +588,7 @@ export default function Navigator() {
                     <span className="gm-rl">{r.label}{r.custom ? "" : r.traced ? " · traced from satellite" : " · straight-line estimate"}</span></span>
                 </button>))}
               <div className="gm-pad gm-startrow">
-                <label className="gm-rec"><input type="checkbox" checked={saveWalk} onChange={(e) => onSaveToggle(e.target.checked)} /><span><b>Save my walk to improve the map</b><small>{sharing === "upload" ? "Shared with the map team, anonymously." : sharing === "local" ? "Kept on this phone only." : "You will be asked how it is used."}</small></span></label>
+                <label className="gm-rec"><input type="checkbox" checked={saveWalk} onChange={(e) => onSaveToggle(e.target.checked)} /><span><b>Save my walk to improve the map</b><small>{sharing === "upload" ? "Shared with the map team. Your name is not included." : sharing === "local" ? "Kept on this phone only." : "You will be asked how it is used."}</small></span></label>
                 {sharing && CAN_UPLOAD && <button className="gm-rec-link" onClick={() => { setConfirmDel(false); setConsentOpen(true); }}>Change walk sharing</button>}
                 <button className="gm-startbtn" onClick={startNav}><Icon name="navigate" size={20} color="#fff" /> Start</button></div>
               <p className="gm-fine">{sdir.routes[0].mode === "cab" ? "A cab stays on the roads, so you may be dropped at the nearest road and walk the last bit. Agree the fare with the driver before you get in." : sdir.routes[0].traced || !sdir.routes[0].custom ? "Footpaths are traced from satellite images and not yet walked, allow a little extra time." : "Walked and recorded by the Unilorin Navigator team."}</p>
@@ -629,8 +629,8 @@ export default function Navigator() {
           <div className="gm-dialog" role="dialog" aria-modal="true" aria-labelledby="walk-consent-title" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => { if (e.key === "Escape") { setConsentOpen(false); setConfirmDel(false); } }}>
             <h2 id="walk-consent-title">Help improve the Unilorin map</h2>
             <p>When you use <b>Start</b>, the app can save the path your phone follows. The team uses real walks to add paths that are missing from the map.</p>
-            <div className="gm-dl"><b>What is saved</b><ul><li>The GPS points of that walk, the time, and where you were going.</li><li>A random code made on your phone. <u>Not</u> your name, number or email.</li></ul></div>
-            <div className="gm-dl"><b>What is not</b><ul><li>Nothing is saved or sent when you are not using Start.</li><li>You are never identified or contacted.</li></ul></div>
+            <div className="gm-dl"><b>What is saved</b><ul><li>The GPS points of that walk, the time, and where you were going.</li><li>A random code made on your phone. <u>Not</u> your name, number or email.</li><li>The first 40 m of each walk is cut off, so where you started is not shared.</li></ul></div>
+            <div className="gm-dl"><b>What is not</b><ul><li>Nothing is saved or sent when you are not using Start.</li><li>We do not ask for your name, number or email, and we do not contact you.</li></ul></div>
             <div className="gm-dl"><b>Your control</b><ul><li>Only the map team can see shared walks. They are deleted automatically after 12 months.</li><li>You can stop and delete everything you shared, from this same screen.</li></ul></div>
             {confirmDel ? (
               <div className="gm-dact">
