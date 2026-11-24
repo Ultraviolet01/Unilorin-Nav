@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Unilorin Navigator", description: "Campus and UITH navigation for Unilorin students.",
-  manifest: "/manifest.json",
+  manifest: "/manifest.json", icons: { icon: "/icons/icon.svg" },
 };
 export const viewport: Viewport = { themeColor: "#7C3AED", width: "device-width", initialScale: 1 };
 

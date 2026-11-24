@@ -15,6 +15,7 @@ const CAMPUS: Record<Tab, { label: string; center: [number, number]; zoom: numbe
   main: { label: "Main Campus", center: [4.6727, 8.4805], zoom: 15.3, hint: "Search Unilorin" },
   uith: { label: "UITH & Colleges", center: [4.5326, 8.4797], zoom: 17, hint: "Search UITH & Colleges" },
 };
+const readBase = (): Base => { try { const b = localStorage.getItem("unilorin-base"); if (b === "map" || b === "dark" || b === "sat") return b; } catch { /* ignore */ } return "sat"; };
 const EMPTY: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 const lines = (cs: [number, number][][]): GeoJSON.FeatureCollection => ({ type: "FeatureCollection", features: cs.map((c) => ({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: c } })) });
 const fmtDist = (m: number) => (m < 1000 ? `${Math.max(10, Math.round(m / 10) * 10)} m` : `${(m / 1000).toFixed(1)} km`);
@@ -57,10 +58,10 @@ export default function Navigator() {
 
   // ---------- map overlays (re-added after every style change) ----------
   function addOverlays(m: maplibregl.Map) {
-    const sat = baseRef.current === "sat";
+    const b = baseRef.current, sat = b === "sat", dark = b === "dark";
     if (!m.getSource("buildings")) m.addSource("buildings", { type: "geojson", data: buildings as any });
-    if (!m.getLayer("buildings-fill")) m.addLayer({ id: "buildings-fill", type: "fill", source: "buildings", paint: { "fill-color": sat ? "#FFB74D" : "#F9D9B0", "fill-opacity": sat ? 0.35 : 0.9 } });
-    if (!m.getLayer("buildings-line")) m.addLayer({ id: "buildings-line", type: "line", source: "buildings", paint: { "line-color": sat ? "#FFB74D" : "#F29900", "line-width": 2 } });
+    if (!m.getLayer("buildings-fill")) m.addLayer({ id: "buildings-fill", type: "fill", source: "buildings", paint: { "fill-color": sat ? "#FFB74D" : dark ? "#F6A04D" : "#F9D9B0", "fill-opacity": sat ? 0.35 : dark ? 0.5 : 0.9 } });
+    if (!m.getLayer("buildings-line")) m.addLayer({ id: "buildings-line", type: "line", source: "buildings", paint: { "line-color": sat ? "#FFB74D" : dark ? "#F6A04D" : "#F29900", "line-width": 2 } });
     if (!m.getSource("paths")) m.addSource("paths", { type: "geojson", data: paths as any });
     if (!m.getLayer("paths-line")) m.addLayer({ id: "paths-line", type: "line", source: "paths", minzoom: 15, paint: { "line-width": 1.5, "line-opacity": 0.75, "line-color": ["match", ["get", "kind"], "road", "#FFFFFF", "covered", "#FDE047", "#22D3EE"] } });
     for (const [id, data] of [["route-alt", routeRef.current.alt], ["route", routeRef.current.main]] as const) if (!m.getSource(id)) m.addSource(id, { type: "geojson", data });
@@ -84,7 +85,8 @@ export default function Navigator() {
 
   // ---------- map init ----------
   useEffect(() => {
-    const m = new maplibregl.Map({ container: el.current!, style: getMapStyle("sat"), center: CAMPUS.main.center, zoom: CAMPUS.main.zoom, attributionControl: false, pitchWithRotate: false, dragRotate: false });
+    const initial = readBase(); baseRef.current = initial; setBase(initial);
+    const m = new maplibregl.Map({ container: el.current!, style: getMapStyle(initial), center: CAMPUS.main.center, zoom: CAMPUS.main.zoom, attributionControl: false, pitchWithRotate: false, dragRotate: false });
     m.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
     m.on("style.load", () => { addOverlays(m); setReady(true); });
     m.on("zoom", () => setZoomed(m.getZoom() >= 16));
@@ -92,7 +94,12 @@ export default function Navigator() {
     map.current = m;
     return () => m.remove();
   }, []);
-  useEffect(() => { const m = map.current; if (m && ready) m.setStyle(getMapStyle(base)); }, [base]);
+  const baseTouched = useRef(false);
+  useEffect(() => {
+    if (!baseTouched.current) { baseTouched.current = true; return; } // first run = the value we just read, nothing to apply
+    const m = map.current; if (m && ready) m.setStyle(getMapStyle(base));
+    try { localStorage.setItem("unilorin-base", base); } catch { /* ignore */ }
+  }, [base]);
 
   // ---------- load data + deep links ----------
   useEffect(() => {
@@ -244,7 +251,7 @@ export default function Navigator() {
   const pinRow = (p: Poi, extra?: string) => row(p.id, <Icon name={CAT[p.category]?.icon ?? "place"} size={20} color={CAT[p.category]?.color} />, p.name, `${CAT[p.category]?.noun ?? ""} · ${p.campus === "uith" ? "UITH & Colleges" : "Main Campus"}${extra ?? ""}`, () => choosePin(p));
 
   return (
-    <div className={`gm ${base === "sat" ? "sat" : ""} ${view ? "has-sheet" : ""}`}>
+    <div className={`gm ${base === "sat" ? "sat" : ""} ${base === "dark" ? "dark" : ""} ${view ? "has-sheet" : ""}`}>
       <div ref={el} className={`gm-map ${zoomed ? "z16" : ""}`} />
       <div className="gm-panelbg" />
 
@@ -307,7 +314,7 @@ export default function Navigator() {
           <button className="gm-sqbtn" aria-label="Map layers" onClick={() => { setLayerMenu((v) => !v); setCampusMenu(false); }}><Icon name="layers" /></button>
           {layerMenu && (
             <div className="gm-layers">
-              {([["map", "Map"], ["sat", "Satellite"]] as [Base, string][]).map(([b, l]) => <button key={b} className={base === b ? "on" : ""} onClick={() => { setBase(b); setLayerMenu(false); }}><span className={`gm-swatch ${b}`} />{l}</button>)}
+              {([["map", "Map"], ["dark", "Dark"], ["sat", "Satellite"]] as [Base, string][]).map(([b, l]) => <button key={b} className={base === b ? "on" : ""} onClick={() => { setBase(b); setLayerMenu(false); }}><span className={`gm-swatch ${b}`} />{l}</button>)}
             </div>)}
         </div>)}
       {!(view === "place" && full) && !dir && <button className={`gm-fab ${locOn ? "on" : ""} ${sheetUp ? "up" : ""}`} aria-label="Show my location" aria-pressed={locOn} onClick={toggleLocate}><Icon name="locate" /></button>}
@@ -380,7 +387,7 @@ export default function Navigator() {
           <div className="gm-brand"><span className="gm-logo"><Icon name="place" size={22} color="#fff" /></span><div><b>Unilorin Navigator</b><br /><small>Find your way around campus</small></div></div>
           {(Object.keys(CAMPUS) as Tab[]).map((t) => <button key={t} className={`gm-item ${t === tab ? "on" : ""}`} onClick={() => { setDrawer(false); switchTab(t); }}><Icon name={t === "main" ? "school" : "hospital"} size={22} />{CAMPUS[t].label}</button>)}
           <hr />
-          <button className="gm-item" onClick={() => { setBase(base === "map" ? "sat" : "map"); setDrawer(false); }}><Icon name="layers" size={22} />{base === "map" ? "Satellite view" : "Map view"}</button>
+          {([["map", "Map view"], ["dark", "Dark map"], ["sat", "Satellite view"]] as [Base, string][]).map(([b, l]) => <button key={b} className={`gm-item ${base === b ? "on" : ""}`} onClick={() => { setBase(b); setDrawer(false); }}><Icon name="layers" size={22} />{l}</button>)}
           <button className="gm-item" onClick={openTravel}><Icon name="taxi" size={22} />Getting to UITH &amp; the colleges</button>
           <a className="gm-item" href="/field"><Icon name="photo" size={22} />Field collector (team)</a>
           <p className="gm-fine">Map data © OpenStreetMap contributors. Icons: Material Icons (Apache-2.0).</p>

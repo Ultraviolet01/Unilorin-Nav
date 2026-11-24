@@ -33,9 +33,11 @@ a draggable bottom sheet for place details on phones (a left side panel on deskt
 cards, a snackbar for messages, and a coloured-icon POI pin set with a red selected pin. Everything is original code/styling —
 no Google branding, logos or assets are used. Icons are Material Icons (Apache-2.0).
 
-- **Default view:** satellite (Esri World Imagery). **Map view:** Amazon Location when `NEXT_PUBLIC_LOCATION_*` is set,
-  otherwise a clean vector map drawn from the bundled OpenStreetMap extract (`public/basemap.json`, offline-friendly).
-  Rebuild it with `node scripts/build-basemap.mjs`.
+- **Three views** (layers button or menu; the choice is remembered): **Satellite** (default, Esri World Imagery), **Map**
+  (Amazon Location when `NEXT_PUBLIC_LOCATION_*` is set, otherwise a Google-style street map drawn from the bundled
+  OpenStreetMap extract `public/basemap.json` — roads with names, area/place labels, coloured POI dots, campus + UITH/Oja Oba
+  area, works offline) and **Dark** (dark map + dark interface). Rebuild the extract with `node scripts/build-basemap.mjs`.
+  Label fonts are bundled in `public/fonts` (Open Sans, Apache-2.0).
 - Selecting a place highlights its real building footprint. Add `?paths` to the URL to overlay the traced walking network (dev only).
 - Search ranks exact/prefix matches first, understands aliases, and looks across both campuses (see `data/README.md`).
 - Deep links: `/#p=<pin-id>` opens a place, `/#uith` opens the UITH & Colleges tab. "Share" on a place copies/shares that link.
