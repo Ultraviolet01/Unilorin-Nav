@@ -94,7 +94,7 @@ public/             sw.js, manifest.json, basemap.json (OSM extract), fonts/, ic
 infra/template.yaml the whole AWS backend (CloudFormation)
 lambda/getPOIs/     standalone copy of the pins function
 scripts/            data pipeline and field tools (see below)
-docs/               AWS-SETUP.md, PRIVACY.md, field PDFs, screenshots
+docs/               AWS-SETUP.md (how to run it), AWS-USAGE.md (evidence), PRIVACY.md, field PDFs, screenshots
 amplify.yml         build and headers for Amplify Hosting
 CLAUDE.md           project instructions for the AI assistant used on this repo
 ```
@@ -128,6 +128,18 @@ Sources: pins from OpenStreetMap and Google Maps listings shared by the team; pa
 ## AWS
 
 Everything is deployed and documented in **`docs/AWS-SETUP.md`** (addresses, how to redeploy, what protects it, how to remove it all). **`docs/AWS-USAGE.md`** is the evidence page: every AWS service we use, the exact code lines that use it, and a live snapshot of the resources taken from AWS itself. In short:
+
+**AWS at a glance, with proof** (checked live on 24 Nov 2026 from the AWS project itself; full detail and line numbers in `docs/AWS-USAGE.md`):
+
+| AWS service | Proof in the code | Proof in AWS |
+|---|---|---|
+| Amplify Hosting | `amplify.yml` | App `Unilorin Nav`, branch `main`, auto-build on |
+| API Gateway (HTTP API) | `infra/template.yaml:85` | 3 routes, CORS limited to the site, throttled write routes |
+| Lambda (Node.js 24) | `infra/template.yaml:55`, `:195` | 2 functions, 256 MB, 10 s |
+| DynamoDB | `infra/template.yaml:23`, `:156` | Pins table: 36 items; walks table: 0 items, 12-month expiry on |
+| Amazon Location | `src/lib/mapStyle.ts:4-7`, `:65` | Map `unilorin-nav-map`; key limited to reading that map from the live site |
+| CloudFormation | `infra/template.yaml` | Stack `unilorin-nav`: `UPDATE_COMPLETE`, 17 resources |
+| IAM | `infra/template.yaml:34`, `:174` | 2 least-privilege roles |
 
 - Push to `main`: Amplify builds and publishes the site in about 2 to 3 minutes. Other branches do not deploy.
 - Backend changes: edit `infra/template.yaml`, run `cfn-lint`, deploy through a CloudFormation change set.
