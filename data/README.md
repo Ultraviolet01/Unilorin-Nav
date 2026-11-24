@@ -82,3 +82,21 @@ with a notice. For departments/places that have **no pin yet** but are known to 
 wrong tab prompts "it is at <place>", switches tab on Enter/tap and shows the cab-to-the-motor-park notice.
 Currently seeded with Physiology (reported by the team) and the health-sciences colleges — **add more departments as the
 field trip confirms which are at the Old/New College**; don't add one unless it's confirmed.
+
+## Field collector (`/field` page)
+
+Open `https://<your-site>/field` on a phone (GPS needs HTTPS — fine on Amplify and on localhost). It works offline once
+loaded and keeps everything on the phone until exported.
+
+1. Enter your name, then tap a place from the checklist (existing pins show as "re-check" and tell you how many metres
+   the current pin is off). Stand at the entrance → **Use my GPS** (holds ~10 s and keeps the best reading; aim for under
+   ±15 m, move to open sky if worse) → **take photo** → note → **Save**. "＋ Add a place" covers anything not on the list.
+2. **Footpaths** tab: pick the start and end pins, press Start, walk the path, press Stop. Only existing pins can be
+   start/end points.
+3. **Export** tab: *Share all* sends `places.csv` + photos + `footpaths.kml` straight to WhatsApp; or use the download buttons.
+4. Developer: 
+   ```bash
+   npm run sheet-to-pois -- places.csv data/pois.json --merge   # adds/updates pins, keeps the rest, marks them verified
+   npm run kml-to-routes -- footpaths.kml                       # routes.json (hand-made routes win over the traced network)
+   ```
+   and put the photos in `public/photos/`. Several teammates can each export; run the merge once per file.

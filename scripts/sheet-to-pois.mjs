@@ -1,11 +1,12 @@
 // Usage: node scripts/sheet-to-pois.mjs <sheet.csv> [out=data/pois.json]
-// Export the Google Sheet via File → Download → CSV. Validates every row and refuses to write if any row is bad.
-import { readFileSync, writeFileSync } from "node:fs";
+// Export the Google Sheet via File → Download → CSV (or the /field collector's places.csv). Validates every row and refuses to write if any row is bad.
+// Add --merge to keep existing pins and only add/replace the ones in the CSV (matched by id) — use this for field exports.
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { parseCsv, slug, inIlorin } from "./lib.mjs";
 
 const CATS = ["faculty", "hostel", "eatery", "atm", "gate", "health", "admin", "cbt", "uith", "lecture", "sports", "worship", "market", "transport"];
 const CAMPUS = ["main", "mini", "uith"];
-const [, , input, out = "data/pois.json"] = process.argv;
+const argv = process.argv.slice(2), merge = argv.includes("--merge"), [input, out = "data/pois.json"] = argv.filter((a) => a !== "--merge");
 if (!input) { console.error("Usage: node scripts/sheet-to-pois.mjs <sheet.csv> [out]"); process.exit(1); }
 
 const errors = [], pois = [], seen = new Set();
@@ -29,5 +30,7 @@ parseCsv(readFileSync(input, "utf8")).forEach((r, i) => {
 });
 
 if (errors.length) { console.error(errors.join("\n")); console.error(`\n${errors.length} problem(s). Nothing written.`); process.exit(1); }
-writeFileSync(out, JSON.stringify(pois, null, 2) + "\n");
-console.log(`Wrote ${pois.length} pins to ${out}`);
+let final = pois;
+if (merge && existsSync(out)) { const byId = new Map(JSON.parse(readFileSync(out, "utf8")).map((p) => [p.id, p])); for (const p of pois) byId.set(p.id, { ...byId.get(p.id), ...p }); final = [...byId.values()]; }
+writeFileSync(out, JSON.stringify(final, null, 2) + "\n");
+console.log(`Wrote ${final.length} pins to ${out}${merge ? ` (merged ${pois.length} from the CSV)` : ""}`);
