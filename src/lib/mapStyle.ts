@@ -1,7 +1,7 @@
 import type { LayerSpecification, StyleSpecification } from "maplibre-gl";
 
 export type Base = "map" | "dark" | "sat";
-const region = process.env.NEXT_PUBLIC_AWS_REGION ?? "us-east-1";
+const region = process.env.NEXT_PUBLIC_AWS_REGION ?? "eu-north-1";
 const awsName = process.env.NEXT_PUBLIC_LOCATION_MAP_NAME;
 const awsKey = process.env.NEXT_PUBLIC_LOCATION_API_KEY;
 export const HAS_AWS_MAP = !!(awsName && awsKey);

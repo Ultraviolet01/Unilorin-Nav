@@ -19,7 +19,8 @@ Until you deploy, the app falls back to the bundled data automatically, so nothi
 ## Before you start (5 min)
 - Use an IAM Identity Center user or an IAM user with admin rights — **not the root account** — and turn on MFA.
 - Create a **budget alert** (Billing → Budgets → e.g. $5/month). Everything here is pay-per-use and tiny at this scale.
-- Pick one region and use it everywhere (`us-east-1` is the default in the code).
+- Use **one region for everything: `eu-north-1` (Stockholm)** — it is your project's region and the code defaults to it. Don't create Lambda, API Gateway, DynamoDB or the map in another region.
+- Not every service exists in every region. Before deploying, check that **Amazon Location Service** (and the map style you pick) is offered in `eu-north-1`; if it isn't, the app keeps using its built-in OpenStreetMap map, so nothing breaks.
 
 ## Step 1 — Host the site on Amplify (≈10 min, console only)
 1. AWS Console → **AWS Amplify → Create new app → Host web app → GitHub**, authorise, choose `Ultraviolet01/Unilorin-Nav`
