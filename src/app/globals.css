@@ -58,7 +58,7 @@ button.gm-row:hover{background:var(--hover)}.gm-row.static{cursor:default}
 .gm-sheet{position:absolute;z-index:7;left:0;right:0;bottom:calc(var(--bn,60px) + env(safe-area-inset-bottom));background:var(--surface);border-radius:16px 16px 0 0;box-shadow:0 -2px 10px rgba(60,64,67,.3);max-height:236px;overflow:hidden;transition:max-height .25s ease}
 .gm-sheet.full{max-height:min(78vh,640px);overflow:auto}
 .gm-handle{height:24px;display:grid;place-items:center;touch-action:none;cursor:grab}.gm-handle span{width:32px;height:4px;border-radius:2px;background:var(--line)}
-.gm-x{position:absolute;top:8px;right:8px;width:40px;height:40px;border:0;background:none;border-radius:50%;display:grid;place-items:center;color:var(--sub)}.gm-x:hover{background:rgba(60,64,67,.08)}
+.gm-x{position:absolute;top:4px;right:8px;width:40px;height:40px;border:0;background:rgba(60,64,67,.1);border-radius:50%;display:grid;place-items:center;color:var(--sub)}.gm-x:hover{background:rgba(60,64,67,.2)}
 .gm-pad{padding:0 16px 14px}.gm-title{font-size:22px;line-height:28px;font-weight:400;margin:0 40px 0 0;display:flex;gap:10px;align-items:center}
 .gm-sub{font-size:14px;line-height:20px;color:var(--sub);margin:2px 0 0}.gm-warn{font-size:13px;color:#b06000;margin:4px 0 0}.gm-body{font-size:15px;line-height:22px;margin:12px 0 4px}
 .gm-actions{display:flex;gap:8px;margin:12px 0 6px;overflow-x:auto}
@@ -121,7 +121,7 @@ button.gm-row:hover{background:var(--hover)}.gm-row.static{cursor:default}
 .gm.dark{--surface:#303134;--sheet:#202124;--hover:#3c4043;--hover2:#2a2b2e;--line2:#3c4043;--line:#5f6368;--text:#e8eaed;--sub:#9aa0a6;--blue-bg:#35435b;--chipon:#d2e3fc;--link:#8ab4f8;--sh:0 1px 2px rgba(0,0,0,.6),0 2px 6px 2px rgba(0,0,0,.35);--sh-lg:0 2px 6px rgba(0,0,0,.6),0 4px 12px 2px rgba(0,0,0,.4);color:var(--text)}
 .gm.dark .gm-search input,.gm.dark .gm-field input{color:var(--text)}.gm.dark .gm-search input::placeholder{color:#9aa0a6}
 .gm.dark .gm-sqbtn,.gm.dark .gm-whereami{color:#bdc1c6}.gm.dark .gm-whereami.on{color:#8ab4f8}
-.gm.dark .gm-poi-dot,.gm.dark .gm-start{border-color:#202124}.gm.dark .gm-handle span{background:#5f6368}
+.gm.dark .gm-poi-dot,.gm.dark .gm-start{border-color:#202124}.gm.dark .gm-handle span{background:#5f6368}.gm.dark .gm-x{background:rgba(255,255,255,.12);color:#e8eaed}.gm.dark .gm-x:hover{background:rgba(255,255,255,.2)}
 .gm.dark .gm-photo{color:#9aa0a6}.gm.dark .gm-modes .on,.gm.dark .gm-route.on{background:var(--blue-bg)}.gm.dark .gm-rinfo b{color:#81c995}
 .gm-swatch.dark{background:linear-gradient(135deg,#1d2944 0 30%,#4c6ba8 30% 38%,#18213a 38% 70%,#0d2a4a 70%)}
 
@@ -399,12 +399,12 @@ button.gm-row:active{transform:scale(.985)}
 .gm-swatch.aws::after{content:"AWS";position:absolute;right:3px;bottom:3px;font:700 9px/1 Roboto,sans-serif;letter-spacing:.04em;color:#fff;background:#232f3e;border-radius:3px;padding:2px 4px}
 
 /* ---- phone fixes: the card must never hide under the browser toolbar or lose its close button ---- */
-.gm-grip{position:sticky;top:0;z-index:3;background:var(--sheet);border-radius:16px 16px 0 0}
+.gm-grip{position:sticky;top:0;z-index:3;background:var(--sheet);border-radius:16px 16px 0 0;min-height:48px}
 .gm-grip .gm-x{position:absolute}
 .gm-sheet.full{max-height:min(78vh,640px)}
 @supports (height:1dvh){.gm-sheet.full{max-height:min(78dvh,640px)}}
 .gm-sheet::after{content:"";display:block;height:16px}
-@media (pointer:coarse){.gm-sheet.full::after{height:calc(72px + env(safe-area-inset-bottom))}} /* room to scroll the last lines above Safari's floating toolbar */
+@media (pointer:coarse){.gm-sheet.full::after{height:calc(72px + env(safe-area-inset-bottom))}}
 .gm-steps{list-style:none;counter-reset:step;margin:10px 0 6px;padding:0}
 .gm-steps li{counter-increment:step;position:relative;padding:2px 0 14px 40px;font-size:15px;line-height:22px}
 .gm-steps li::before{content:counter(step);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:14px;font-weight:500}
