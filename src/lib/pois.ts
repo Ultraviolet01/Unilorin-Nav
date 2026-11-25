@@ -6,7 +6,7 @@ import { buildGraph, shortest, snap, type Graph } from "./graph";
 export type Category = "faculty" | "hostel" | "eatery" | "atm" | "gate" | "health" | "admin" | "cbt" | "uith" | "lecture" | "sports" | "worship" | "market" | "transport";
 export interface Poi {
   id: string; name: string; category: Category; lat: number; lng: number;
-  description: string; photo?: string; campus: "main" | "mini" | "uith"; verified?: boolean; source?: string; aliases?: string[];
+  description: string; photo?: string; campus: "main" | "mini" | "uith" | "cohs"; verified?: boolean; source?: string; aliases?: string[];
 }
 export type Mode = "walk" | "cab";
 export const WALK_M_PER_MIN = 80, CAB_M_PER_MIN = 330; // about 5 km/h on foot; about 20 km/h by cab on campus roads with stops

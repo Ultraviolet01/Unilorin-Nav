@@ -13,11 +13,13 @@ import paths from "../../data/paths.json";
 import transport from "../../data/transport.json";
 import elsewhere from "../../data/elsewhere.json";
 
-type Tab = "main" | "uith";
+type Tab = "main" | "cohs" | "uith";
 const CAMPUS: Record<Tab, { label: string; center: [number, number]; zoom: number; hint: string }> = {
   main: { label: "Main Campus", center: [4.6727, 8.4805], zoom: 15.3, hint: "Search Unilorin" },
-  uith: { label: "UITH & Colleges", center: [4.5326, 8.4797], zoom: 17, hint: "Search UITH & Colleges" },
+  cohs: { label: "COHS & Colleges", center: [4.6495, 8.522], zoom: 15, hint: "Search COHS & Colleges" },
+  uith: { label: "UITH", center: [4.5326, 8.4797], zoom: 16, hint: "Search UITH" },
 };
+const campusTab = (campus: string): Tab => campus === "cohs" ? "cohs" : campus === "uith" ? "uith" : "main";
 const BASES: [Base, string, string][] = [["map", "Map", "Map view"], ["dark", "Dark", "Dark map"], ["sat", "Satellite", "Satellite view"], ...(HAS_AWS_MAP ? [["aws", "Amazon Map", "Amazon Map (AWS)"] as [Base, string, string]] : [])];
 const readBase = (): Base => { try { const b = localStorage.getItem("unilorin-base") as Base | null; if (b && BASES.some((x) => x[0] === b)) return b; } catch { /* ignore */ } return "sat"; };
 const EMPTY: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
@@ -25,7 +27,7 @@ const lines = (cs: [number, number][][]): GeoJSON.FeatureCollection => ({ type: 
 const fmtDist = (m: number) => (m < 1000 ? `${Math.max(10, Math.round(m / 10) * 10)} m` : `${(m / 1000).toFixed(1)} km`);
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 const isDesktop = () => typeof window !== "undefined" && window.innerWidth >= 900;
-const hashFor = (t: Tab) => (t === "uith" ? "#uith" : "#main");
+const hashFor = (t: Tab) => (t === "uith" ? "#uith" : t === "cohs" ? "#cohs" : "#main");
 
 // ---- motion helpers ----
 const reduced = () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -106,9 +108,8 @@ export default function Navigator() {
   const [travel, setTravel] = useState(false), [drawer, setDrawer] = useState(false), [campusMenu, setCampusMenu] = useState(false), [layerMenu, setLayerMenu] = useState(false);
   const [locOn, setLocOn] = useState(false), [locFix, setLocFix] = useState(false), [toast, setToast] = useState<string | null>(null), [zoomed, setZoomed] = useState(false), [dragY, setDragY] = useState<number | null>(null);
 
-  const tabPois = useMemo(() => pois.filter((p) => (tab === "uith") === (p.campus === "uith")), [pois, tab]);
+  const tabPois = useMemo(() => pois.filter((p) => p.campus === tab), [pois, tab]);
   const otherPois = useMemo(() => pois.filter((p) => !tabPois.includes(p)), [pois, tabPois]);
-  const otherTab: Tab = tab === "main" ? "uith" : "main";
   const tabRef = useRef(tab), baseRef = useRef(base), selRef = useRef<string | null>(null);
   tabRef.current = tab; baseRef.current = base; selRef.current = selected?.id ?? null; poisRef.current = pois;
 
@@ -198,13 +199,13 @@ export default function Navigator() {
     loadPois().then((ps) => {
       setPois(ps);
       const m = location.hash.match(/^#p=(.+)$/), target = m && ps.find((p) => p.id === decodeURIComponent(m[1]));
-      if (target) { pending.current = target; switchRef.current(target.campus === "uith" ? "uith" : "main"); }
-      else switchRef.current(location.hash === "#uith" ? "uith" : "main");
+      if (target) { pending.current = target; switchRef.current(campusTab(target.campus)); }
+      else switchRef.current(location.hash === "#uith" ? "uith" : location.hash === "#cohs" ? "cohs" : "main");
     });
     const onHash = () => {
       const m = location.hash.match(/^#p=(.+)$/), p = m && poisRef.current.find((x) => x.id === decodeURIComponent(m[1]));
-      if (p) { const t: Tab = p.campus === "uith" ? "uith" : "main"; if (t === tabRef.current) pickRef.current(p); else { pending.current = p; switchRef.current(t); } }
-      else if (!location.hash.startsWith("#p=")) switchRef.current(location.hash === "#uith" ? "uith" : "main");
+      if (p) { const t = campusTab(p.campus); if (t === tabRef.current) pickRef.current(p); else { pending.current = p; switchRef.current(t); } }
+      else if (!location.hash.startsWith("#p=")) switchRef.current(location.hash === "#uith" ? "uith" : location.hash === "#cohs" ? "cohs" : "main");
     };
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
@@ -273,12 +274,13 @@ export default function Navigator() {
   pickRef.current = pick;
   function choosePin(p: Poi) {
     if (tabPois.includes(p)) pick(p);
-    else { pending.current = p; setQ(""); setToast(`${p.name} is not on the ${CAMPUS[tab].label} tab, it is on ${CAMPUS[otherTab].label}. Switched for you.`); switchTab(otherTab); }
+    else { const dest = campusTab(p.campus); pending.current = p; setQ(""); setToast(`${p.name} is not on the ${CAMPUS[tab].label} tab, it is on ${CAMPUS[dest].label}. Switched for you.`); switchTab(dest); }
   }
   function jumpToAlias() {
     if (!aliasElsewhere) return;
-    setToast(`“${q.trim()}” is not on the ${CAMPUS[tab].label} tab, it is at ${aliasElsewhere.place}. Switched to ${CAMPUS[otherTab].label}; you will need a cab (see below).`);
-    switchTab(otherTab); setTravel(true); setFocus(false);
+    const dest = campusTab(aliasElsewhere.campus);
+    setToast(`"${q.trim()}" is not on the ${CAMPUS[tab].label} tab, it is at ${aliasElsewhere.place}. Switched to ${CAMPUS[dest].label}; you will need a cab (see below).`);
+    switchTab(dest); setTravel(true); setFocus(false);
   }
   const openTravel = () => { setSelected(null); setDir(null); clearRoute(); setQ(""); setFocus(false); setDrawer(false); setTravel(true); };
   function onEnter() { if (aliasElsewhere) jumpToAlias(); else if (results[0]) choosePin(results[0]); else if (results2[0]) choosePin(results2[0]); else if (travelHit) openTravel(); (document.activeElement as HTMLElement)?.blur(); }
@@ -463,7 +465,7 @@ export default function Navigator() {
 
   const row = (key: string, icon: React.ReactNode, title: React.ReactNode, sub: React.ReactNode, onClick: () => void) => (
     <button key={key} className="gm-row" onClick={onClick}><span className="gm-ico">{icon}</span><span><div className="gm-rt">{title}</div>{sub && <div className="gm-rs">{sub}</div>}</span></button>);
-  const pinRow = (p: Poi, extra?: string) => row(p.id, <Icon name={CAT[p.category]?.icon ?? "place"} size={20} color={CAT[p.category]?.color} />, p.name, `${CAT[p.category]?.noun ?? ""} · ${p.campus === "uith" ? "UITH & Colleges" : "Main Campus"}${extra ?? ""}`, () => choosePin(p));
+  const pinRow = (p: Poi, extra?: string) => row(p.id, <Icon name={CAT[p.category]?.icon ?? "place"} size={20} color={CAT[p.category]?.color} />, p.name, `${CAT[p.category]?.noun ?? ""} · ${CAMPUS[campusTab(p.campus)].label}${extra ?? ""}`, () => choosePin(p));
   const sel = S?.selected ?? null, sdir = S?.dir ?? null, scat = S?.cat ?? null;
   const sheetClass = !S ? "" : S.view === "place" ? (full ? "full" : "") : S.view === "list" ? "full list" : S.view === "dir" ? "full dirs" : "full travel";
 
@@ -492,10 +494,10 @@ export default function Navigator() {
           {focus && (
             <div className="gm-drop" onMouseDown={(e) => e.preventDefault()}>
               {!q ? (<>
-                {recents.map((id) => pois.find((p) => p.id === id)).filter((p): p is Poi => !!p).map((p) => row("r" + p.id, <Icon name="history" size={20} />, p.name, `${CAT[p.category]?.noun ?? ""} · ${p.campus === "uith" ? "UITH & Colleges" : "Main Campus"}`, () => choosePin(p)))}
+                {recents.map((id) => pois.find((p) => p.id === id)).filter((p): p is Poi => !!p).map((p) => row("r" + p.id, <Icon name="history" size={20} />, p.name, `${CAT[p.category]?.noun ?? ""} · ${CAMPUS[campusTab(p.campus)].label}`, () => choosePin(p)))}
                 {!recents.length && tabPois.slice(0, 6).map((p) => pinRow(p))}
               </>) : (<>
-                {aliasElsewhere && row("alias", <Icon name="hospital" size={20} color="#D93025" />, <>“{q.trim()}” is at {aliasElsewhere.place}</>, `Not on this tab, tap to switch to ${CAMPUS[otherTab].label}`, jumpToAlias)}
+                {aliasElsewhere && row("alias", <Icon name="hospital" size={20} color="#D93025" />, <>“{q.trim()}” is at {aliasElsewhere.place}</>, `Not on this tab, tap to switch to ${CAMPUS[campusTab(aliasElsewhere.campus)].label}`, jumpToAlias)}
                 {aliasHere && <div className="gm-row static"><span className="gm-ico"><Icon name="info" size={20} /></span><span><div className="gm-rt">This is at {aliasHere.place}</div><div className="gm-rs">Exact building not mapped yet</div></span></div>}
                 {travelHit && row("travel", <Icon name="taxi" size={20} color="#1A73E8" />, transport.shortTitle, "Cab and motor park advice", openTravel)}
                 {results.map((p) => pinRow(p))}
@@ -560,10 +562,10 @@ export default function Navigator() {
             {S.view === "place" && sel && (
               <div className="gm-pad">
                 <h2 className="gm-title">{sel.name}</h2>
-                <p className="gm-sub">{CAT[sel.category]?.noun} · {sel.campus === "uith" ? "UITH & Colleges" : "Main Campus"}</p>
+                <p className="gm-sub">{CAT[sel.category]?.noun} · {CAMPUS[campusTab(sel.campus)].label}</p>
                 {sel.verified === false && <p className="gm-warn">Location not verified on the ground yet</p>}
                 <div className="gm-actions">
-                  {sel.campus === "uith" || tabPois.length < 2
+                  {(sel.campus === "uith" || sel.campus === "cohs") || tabPois.length < 2
                     ? <button className="gm-btn fill" onClick={openTravel}><Icon name="taxi" size={20} color="#fff" />How to get here</button>
                     : <button className="gm-btn fill" onClick={() => { openDirections(sel); tap(); }}><Icon name="directions" size={20} color="#fff" />Directions</button>}
                   <button className="gm-btn" onClick={() => { share(sel); tap(); }}><Icon name="share" size={20} />Share</button>
@@ -572,7 +574,7 @@ export default function Navigator() {
                 {sel.description && <div className="gm-info"><Icon name="info" size={22} color="#1a73e8" /><span>{sel.description}</span></div>}
                 <button className="gm-info click" onClick={() => copyCoords(sel)}><Icon name="place" size={22} color="#1a73e8" /><span>{sel.lat.toFixed(6)}, {sel.lng.toFixed(6)}</span><Icon name="copy" size={18} color="#5f6368" /></button>
                 <div className="gm-info"><Icon name="verified" size={22} color={sel.verified === false ? "#9aa0a6" : "#188038"} /><span>{sel.verified === false ? "Not yet confirmed, position from OpenStreetMap" : "Confirmed on the ground"}</span></div>
-                {sel.campus === "uith" && <button className="gm-info click" onClick={openTravel}><Icon name="taxi" size={22} color="#1a73e8" /><span>Coming from the Main Campus? How to get here</span></button>}
+                {(sel.campus === "uith" || sel.campus === "cohs") && <button className="gm-info click" onClick={openTravel}><Icon name="taxi" size={22} color="#1a73e8" /><span>Coming from the Main Campus? How to get here</span></button>}
               </div>)}
 
             {S.view === "list" && scat && (<>
@@ -604,22 +606,27 @@ export default function Navigator() {
                 <p className="gm-sub"><b>What we know so far</b></p>
                 <ul className="gm-list">{transport.known.map((t) => <li key={t}>{t}</li>)}</ul>
                 {!transport.verified && <p className="gm-warn">{transport.note}</p>}
-                <div className="gm-actions"><button className="gm-btn fill" onClick={() => switchTab(tab === "main" ? "uith" : "main")}>{tab === "main" ? "Show UITH & Colleges" : "Back to Main Campus"}</button></div>
+                <div className="gm-actions">
+                  {tab !== "cohs" && <button className="gm-btn" onClick={() => switchTab("cohs")}>Show COHS &amp; Colleges</button>}
+                  {tab !== "uith" && <button className="gm-btn" onClick={() => switchTab("uith")}>Show UITH</button>}
+                  {tab !== "main" && <button className="gm-btn fill" onClick={() => switchTab("main")}>Back to Main Campus</button>}
+                </div>
               </div>)}
           </div>
         </section>)}
 
       {tab === "uith" && !view && <div className="gm-note"><b>University of Ilorin Teaching Hospital</b><br />Only the hospital grounds are mapped so far, wards, departments and emergency routes will be added after a site visit.<button onClick={openTravel}>Coming from the Main Campus? How to get here</button></div>}
+      {tab === "cohs" && !view && <div className="gm-note"><b>College of Health Sciences</b><br />Old College class area and New College lecture halls are pinned. More buildings will be added after a site visit.<button onClick={openTravel}>Coming from the Main Campus? How to get here</button></div>}
 
       {/* ---- drawer ---- */}
       <Presence open={drawer} ms={260}>{(closing) => (<>
         <div className={`gm-scrim ${closing ? "out" : ""}`} onClick={() => setDrawer(false)} />
         <aside className={`gm-drawer ${closing ? "out" : ""}`} aria-label="Menu">
           <div className="gm-brand"><span className="gm-logo"><Icon name="place" size={22} color="#fff" /></span><div><b>Unilorin Navigator</b><br /><small>Find your way around campus</small></div></div>
-          {(Object.keys(CAMPUS) as Tab[]).map((t) => <button key={t} className={`gm-item ${t === tab ? "on" : ""}`} onClick={() => { setDrawer(false); switchTab(t); }}><Icon name={t === "main" ? "school" : "hospital"} size={22} />{CAMPUS[t].label}</button>)}
+          {(Object.keys(CAMPUS) as Tab[]).map((t) => <button key={t} className={`gm-item ${t === tab ? "on" : ""}`} onClick={() => { setDrawer(false); switchTab(t); }}><Icon name={t === "uith" ? "hospital" : "school"} size={22} />{CAMPUS[t].label}</button>)}
           <hr />
           {BASES.map(([b, , l]) => <button key={b} className={`gm-item ${base === b ? "on" : ""}`} onClick={() => { setBase(b); setDrawer(false); }}><Icon name="layers" size={22} />{l}</button>)}
-          <button className="gm-item" onClick={openTravel}><Icon name="taxi" size={22} />Getting to UITH &amp; the colleges</button>
+          <button className="gm-item" onClick={openTravel}><Icon name="taxi" size={22} />Getting to COHS &amp; UITH</button>
           <a className="gm-item" href="/field/"><Icon name="photo" size={22} />Field collector (team)</a>
           <p className="gm-fine">Map data © OpenStreetMap contributors. Icons: Material Icons (Apache-2.0).</p>
         </aside></>)}</Presence>
