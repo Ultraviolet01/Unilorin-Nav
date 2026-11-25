@@ -14,6 +14,7 @@ import transport from "../../data/transport.json";
 import elsewhere from "../../data/elsewhere.json";
 
 type Tab = "main" | "cohs" | "uith";
+type NavTab = "explore" | "browse" | "saved" | "settings";
 const CAMPUS: Record<Tab, { label: string; center: [number, number]; zoom: number; hint: string }> = {
   main: { label: "Main Campus", center: [4.6727, 8.4805], zoom: 15.3, hint: "Search Unilorin" },
   cohs: { label: "COHS & Colleges", center: [4.6495, 8.522], zoom: 15, hint: "Search COHS & Colleges" },
@@ -105,7 +106,7 @@ export default function Navigator() {
   const [saveWalk, setSaveWalk] = useState(false), [recording, setRecording] = useState(false);
   const [sharing, setSharingState] = useState<Sharing>(null), [consentOpen, setConsentOpen] = useState(false), [confirmDel, setConfirmDel] = useState(false), [busy, setBusy] = useState(false);
   const recPts = useRef<[number, number][]>([]), recId = useRef(""), recLabel = useRef(""), recKind = useRef("footpath"), recDest = useRef("");
-  const [travel, setTravel] = useState(false), [drawer, setDrawer] = useState(false), [campusMenu, setCampusMenu] = useState(false), [layerMenu, setLayerMenu] = useState(false);
+  const [travel, setTravel] = useState(false), [drawer, setDrawer] = useState(false), [layerMenu, setLayerMenu] = useState(false), [navTab, setNavTab] = useState<NavTab>("explore");
   const [locOn, setLocOn] = useState(false), [locFix, setLocFix] = useState(false), [toast, setToast] = useState<string | null>(null), [zoomed, setZoomed] = useState(false), [dragY, setDragY] = useState<number | null>(null);
 
   const tabPois = useMemo(() => pois.filter((p) => p.campus === tab), [pois, tab]);
@@ -175,7 +176,7 @@ export default function Navigator() {
     m.on("error", () => { if (awaiting.current && baseRef.current === "aws") { awaiting.current = false; setToast("Amazon Map isn't available right now, showing the standard map instead."); skipSave.current = true; setBase("map"); } });
     m.on("zoom", () => setZoomed(m.getZoom() >= 16));
     m.on("dragstart", () => { if (navWatch.current !== null) { navFollow.current = false; setFollowing(false); } }); // the walker looked around: stop auto-following
-    m.on("click", (e) => { if (!(e.originalEvent.target as HTMLElement).closest(".gm-poi")) { setLayerMenu(false); setCampusMenu(false); } });
+    m.on("click", (e) => { if (!(e.originalEvent.target as HTMLElement).closest(".gm-poi")) { setLayerMenu(false); } });
     map.current = m;
     if (location.search.includes("debug")) (window as unknown as { __map?: maplibregl.Map }).__map = m; // test hook, only with ?debug
     return () => { if (navWatch.current !== null) navigator.geolocation.clearWatch(navWatch.current); cancelAnimationFrame(navAnim.current); m.remove(); };
@@ -527,27 +528,29 @@ export default function Navigator() {
           </div>)}
       </div>
 
-      {/* ---- chips (re-keyed per campus so they animate in again) ---- */}
-      {!dir && (
-        <div className="gm-chips" key={tab}>
-          <button className={`gm-chip gm-campus ${campusMenu ? "on" : ""}`} style={{ "--i": 0 } as React.CSSProperties} onClick={() => { setCampusMenu((v) => !v); setLayerMenu(false); tap(); }} aria-haspopup="menu" aria-expanded={campusMenu}><Icon name="place" size={18} color="#EA4335" />{CAMPUS[tab].label}<Icon name="expand" size={18} className="gm-caret" /></button>
-          {cats.map((c, i) => <button key={c} className={`gm-chip ${cat === c ? "on" : ""}`} style={{ "--i": i + 1 } as React.CSSProperties} onClick={() => toggleCat(c)} aria-pressed={cat === c}><Icon name={CAT[c].icon} size={18} color={cat === c ? "#174EA6" : CAT[c].color} />{CAT[c].label}</button>)}
+      {/* ---- campus tabs ---- */}
+      {navTab === "explore" && !dir && !nav && (
+        <div className="gm-camtabs" key={`ct-${tab}`}>
+          {(Object.keys(CAMPUS) as Tab[]).map((t) => (
+            <button key={t} className={`gm-camtab ${tab === t ? "on" : ""}`} onClick={() => { switchTab(t); tap(); }}>{CAMPUS[t].label}</button>
+          ))}
         </div>)}
-      <Presence open={campusMenu && !dir} ms={150}>{(closing) => (
-        <div className={`gm-menu ${closing ? "out" : ""}`} role="menu">
-          {(Object.keys(CAMPUS) as Tab[]).map((t) => <button key={t} role="menuitemradio" aria-checked={t === tab} className={t === tab ? "on" : ""} onClick={() => { setCampusMenu(false); switchTab(t); }}><span className="gm-radio" />{CAMPUS[t].label}</button>)}
-        </div>)}</Presence>
+      {/* ---- chips (re-keyed per campus so they animate in again) ---- */}
+      {!dir && navTab === "explore" && (
+        <div className="gm-chips" key={tab}>
+          {cats.map((c, i) => <button key={c} className={`gm-chip ${cat === c ? "on" : ""}`} style={{ "--i": i } as React.CSSProperties} onClick={() => toggleCat(c)} aria-pressed={cat === c}><Icon name={CAT[c].icon} size={18} color={cat === c ? "#174EA6" : CAT[c].color} />{CAT[c].label}</button>)}
+        </div>)}
 
       {/* ---- map controls ---- */}
-      {!dir && (
+      {!dir && navTab === "explore" && (
         <div className="gm-ctrl">
-          <button className="gm-sqbtn" aria-label="Map layers" onClick={() => { setLayerMenu((v) => !v); setCampusMenu(false); tap(); }}><Icon name="layers" /></button>
+          <button className="gm-sqbtn" aria-label="Map layers" onClick={() => { setLayerMenu((v) => !v); tap(); }}><Icon name="layers" /></button>
           <Presence open={layerMenu} ms={150}>{(closing) => (
             <div className={`gm-layers ${closing ? "out" : ""}`}>
               {BASES.map(([b, l]) => <button key={b} className={base === b ? "on" : ""} onClick={() => { setBase(b); setLayerMenu(false); tap(); }}><span className={`gm-swatch ${b}`} />{l}</button>)}
             </div>)}</Presence>
         </div>)}
-      {!(view === "place" && full) && !dir && <button className={`gm-fab ${locOn ? "on" : ""} ${locOn && !locFix ? "seek" : ""} ${sheetUp ? "up" : ""}`} aria-label="Show my location" aria-pressed={locOn} onClick={toggleLocate}><Icon name="locate" /></button>}
+      {!(view === "place" && full) && !dir && navTab === "explore" && <button className={`gm-fab ${locOn ? "on" : ""} ${locOn && !locFix ? "seek" : ""} ${sheetUp ? "up" : ""}`} aria-label="Show my location" aria-pressed={locOn} onClick={toggleLocate}><Icon name="locate" /></button>}
 
       {/* ---- bottom sheet / side panel (one element; content swaps, it slides in/out and follows the finger) ---- */}
       {sheetMounted && S && (
@@ -615,8 +618,8 @@ export default function Navigator() {
           </div>
         </section>)}
 
-      {tab === "uith" && !view && <div className="gm-note"><b>University of Ilorin Teaching Hospital</b><br />Only the hospital grounds are mapped so far, wards, departments and emergency routes will be added after a site visit.<button onClick={openTravel}>Coming from the Main Campus? How to get here</button></div>}
-      {tab === "cohs" && !view && <div className="gm-note"><b>College of Health Sciences</b><br />Old College class area and New College lecture halls are pinned. More buildings will be added after a site visit.<button onClick={openTravel}>Coming from the Main Campus? How to get here</button></div>}
+      {tab === "uith" && !view && navTab === "explore" && <div className="gm-note"><b>University of Ilorin Teaching Hospital</b><br />Only the hospital grounds are mapped so far, wards, departments and emergency routes will be added after a site visit.<button onClick={openTravel}>Coming from the Main Campus? How to get here</button></div>}
+      {tab === "cohs" && !view && navTab === "explore" && <div className="gm-note"><b>College of Health Sciences</b><br />Old College class area and New College lecture halls are pinned. More buildings will be added after a site visit.<button onClick={openTravel}>Coming from the Main Campus? How to get here</button></div>}
 
       {/* ---- drawer ---- */}
       <Presence open={drawer} ms={260}>{(closing) => (<>
@@ -630,6 +633,94 @@ export default function Navigator() {
           <a className="gm-item" href="/field/"><Icon name="photo" size={22} />Field collector (team)</a>
           <p className="gm-fine">Map data © OpenStreetMap contributors. Icons: Material Icons (Apache-2.0).</p>
         </aside></>)}</Presence>
+
+      {/* ---- Browse screen ---- */}
+      {navTab === "browse" && (
+        <div className="gm-screen">
+          <div className="gm-screen-head"><h2>Browse</h2><p>Explore places by category</p></div>
+          <div className="gm-browse-grid">
+            {CHIP_ORDER.filter((c) => pois.some((p) => p.category === c)).map((c, i) => {
+              const count = tabPois.filter((p) => p.category === c).length;
+              return (
+                <button key={c} className="gm-browse-card" style={{ animationDelay: `${i * 40}ms` } as React.CSSProperties}
+                  onClick={() => { setNavTab("explore"); toggleCat(c); tap(); }}>
+                  <div className="gm-browse-icon" style={{ background: CAT[c].color + "22" }}>
+                    <Icon name={CAT[c].icon} size={24} color={CAT[c].color} />
+                  </div>
+                  <span className="gm-browse-name">{CAT[c].label}</span>
+                  <span className="gm-browse-count">{count} place{count !== 1 ? "s" : ""}</span>
+                </button>);
+            })}
+          </div>
+        </div>)}
+
+      {/* ---- Saved screen ---- */}
+      {navTab === "saved" && (
+        <div className="gm-screen">
+          <div className="gm-screen-head"><h2>Saved</h2><p>Your recent places</p></div>
+          {recents.length === 0
+            ? <div style={{ padding: "32px 16px", textAlign: "center", color: "var(--sub)", fontSize: 14 }}>No saved places yet. Tap a pin on the map to explore places.</div>
+            : recents.map((id) => pois.find((p) => p.id === id)).filter((p): p is Poi => !!p).map((p) => (
+                <button key={p.id} className="gm-row" onClick={() => { setNavTab("explore"); choosePin(p); tap(); }}>
+                  <span className="gm-ico"><Icon name={CAT[p.category]?.icon ?? "place"} size={20} color={CAT[p.category]?.color} /></span>
+                  <span><div className="gm-rt">{p.name}</div><div className="gm-rs">{CAT[p.category]?.noun ?? ""} · {CAMPUS[campusTab(p.campus)].label}</div></span>
+                </button>))}
+        </div>)}
+
+      {/* ---- Settings screen ---- */}
+      {navTab === "settings" && (
+        <div className="gm-screen">
+          <div className="gm-screen-head"><h2>Settings</h2><p>Map style and options</p></div>
+          <div className="gm-screen-head" style={{ paddingTop: 4 }}><p style={{ fontWeight: 500, color: "var(--text)" }}>Map style</p></div>
+          <div className="gm-settings-layers">
+            {BASES.map(([b, l]) => (
+              <button key={b} className={`gm-settings-layer ${base === b ? "on" : ""}`} onClick={() => { setBase(b); tap(); }}>
+                <span className={`gm-swatch ${b}`} style={{ width: 52, height: 52, borderRadius: 8, display: "block" }} />
+                {l}
+              </button>))}
+          </div>
+          <hr className="gm-settings-hr" />
+          <div className="gm-screen-head" style={{ paddingTop: 4 }}><p style={{ fontWeight: 500, color: "var(--text)" }}>Campus</p></div>
+          {(Object.keys(CAMPUS) as Tab[]).map((t) => (
+            <button key={t} className="gm-row" onClick={() => { setNavTab("explore"); switchTab(t); tap(); }}>
+              <span className="gm-ico"><Icon name={t === "uith" ? "hospital" : "school"} size={20} /></span>
+              <span><div className="gm-rt">{CAMPUS[t].label}</div><div className="gm-rs">{tab === t ? "Currently shown" : "Tap to switch"}</div></span>
+            </button>))}
+          <hr className="gm-settings-hr" />
+          <button className="gm-row" onClick={() => { setNavTab("explore"); openTravel(); tap(); }}>
+            <span className="gm-ico"><Icon name="taxi" size={20} color="#1a73e8" /></span>
+            <span><div className="gm-rt">Getting to COHS &amp; UITH</div><div className="gm-rs">Cab and motor park advice</div></span>
+          </button>
+          <a className="gm-row" href="/field/" style={{ display: "flex", alignItems: "center", gap: 0, textDecoration: "none", color: "inherit" }}>
+            <span className="gm-ico"><Icon name="photo" size={20} /></span>
+            <span><div className="gm-rt">Field collector</div><div className="gm-rs">Map team only</div></span>
+          </a>
+          <p className="gm-fine" style={{ padding: "16px 16px 32px" }}>Map data &copy; OpenStreetMap contributors. Icons: Material Icons (Apache-2.0).</p>
+        </div>)}
+
+      {/* ---- bottom navigation bar ---- */}
+      <nav className="gm-bottomnav" aria-label="Main navigation">
+        <button className={`gm-navitem ${navTab === "explore" ? "on" : ""}`} onClick={() => { setNavTab("explore"); tap(); }} aria-label="Explore">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          Explore
+        </button>
+        <button className={`gm-navitem ${navTab === "browse" ? "on" : ""}`} onClick={() => { setNavTab("browse"); tap(); }} aria-label="Browse">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
+          Browse
+        </button>
+        <button className={`gm-navitem ${navTab === "explore" && tab === "cohs" ? "on" : ""}`} onClick={() => { setNavTab("explore"); switchTab("cohs"); tap(); }} aria-label="COHS">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-1.99.9-1.99 2L3 19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 11h-4v4h-4v-4H6v-4h4V6h4v4h4v4z"/></svg>
+          COHS
+        </button>
+        <button className={`gm-navitem ${navTab === "saved" ? "on" : ""}`} onClick={() => { setNavTab("saved"); tap(); }} aria-label="Saved">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+          Saved
+        </button>
+        <button className={`gm-navitem ${navTab === "settings" ? "on" : ""}`} onClick={() => { setNavTab("settings"); tap(); }} aria-label="Settings">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+          Settings
+        </button>
+      </nav>
 
       {consentOpen && (
         <div className="gm-scrim2" onClick={() => { setConsentOpen(false); setConfirmDel(false); }}>
