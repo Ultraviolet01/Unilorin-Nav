@@ -298,8 +298,23 @@ export default function Navigator() {
   }
 
   // ---------- my location ----------
+  function locateBeep() {
+    try {
+      const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!Ctx) return;
+      const ctx = new Ctx();
+      const osc = ctx.createOscillator(); const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = "sine"; osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.22, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.14);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.14);
+    } catch { /* ignore */ }
+  }
+
   function toggleLocate() {
     tap(); if (locOn) { if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current); watchId.current = null; meMarker.current?.remove(); meMarker.current = null; setLocOn(false); setLocFix(false); return; }
+    locateBeep();
     if (!navigator.geolocation) { setToast("Location is not available on this device."); return; }
     setLocOn(true); let first = true;
     watchId.current = navigator.geolocation.watchPosition((p) => {
@@ -556,7 +571,7 @@ export default function Navigator() {
       {!(view === "place" && full) && !dir && navTab === "explore" && (
         <button className={`gm-whereami ${locOn ? "on" : ""} ${locOn && !locFix ? "seek" : ""} ${sheetUp ? "up" : ""}`} aria-label="Show my location" aria-pressed={locOn} onClick={toggleLocate}>
           <Icon name="locate" size={20} />
-          Where am I?
+          <span className="gm-whereami-label">Where am I?</span>
         </button>
       )}
 
