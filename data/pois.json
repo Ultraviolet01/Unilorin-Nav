@@ -510,17 +510,21 @@
     "category": "faculty",
     "lat": 8.5117233,
     "lng": 4.6506893,
-    "description": "The New College of the College of Health Sciences (Faculty of Basic Medical Sciences classes). Not on the Main Campus: take a cab. Position approximate, from Google Maps.",
+    "description": "College of Health Sciences Main Complex, New College campus. Houses the Provost's Office, College Administration, Faculty of Clinical Sciences offices and Faculty of Basic Clinical Sciences offices. Not on the Main Campus: take a cab.",
     "photo": "",
     "campus": "uith",
     "verified": false,
-    "source": "Google Maps listing 'College Of Health Sciences, University Of Ilorin' (3.9 stars), shown on the map screenshot; coordinates from a Google AI answer that matches the listing, 24 Nov 2026; not yet checked on the ground",
+    "source": "Google Maps listing 'College Of Health Sciences, University Of Ilorin' (3.9 stars); coordinates confirmed by Google AI answer (8.51172, 4.65069), Nov 2026; not yet checked on the ground",
     "aliases": [
       "new college",
       "college of health sciences",
       "chs",
       "basic medical sciences",
-      "physiology"
+      "basic clinical sciences",
+      "clinical sciences",
+      "physiology",
+      "provost office",
+      "cohs"
     ]
   },
   {
@@ -538,6 +542,53 @@
       "lecture hall a",
       "new college lecture hall",
       "lecture hall"
+    ]
+  },
+  {
+    "id": "cohs-academic-block-2",
+    "name": "COHS Academic Block 2",
+    "category": "faculty",
+    "lat": 8.51140,
+    "lng": 4.65105,
+    "description": "College of Health Sciences Academic Block 2, New College campus. Houses the Departments of Anatomy, Physiology, Pharmacology & Therapeutics, and Medical Microbiology & Parasitology. The Faculty of Basic Medical Sciences (FBMS) Complex (Medical Biochemistry, Nursing Science) is adjacent. Not on the Main Campus: take a cab.",
+    "photo": "",
+    "campus": "uith",
+    "verified": false,
+    "source": "Google AI answer (8.51140, 4.65105), Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "academic block 2",
+      "cohs block 2",
+      "anatomy",
+      "physiology",
+      "pharmacology",
+      "medical microbiology",
+      "parasitology",
+      "fbms",
+      "medical biochemistry",
+      "nursing science"
+    ]
+  },
+  {
+    "id": "dept-of-medicine-uith",
+    "name": "Department of Medicine (UITH)",
+    "category": "uith",
+    "lat": 8.5359,
+    "lng": 4.6456,
+    "description": "Department of Medicine, Faculty of Clinical Sciences, located inside the UITH complex where clinical lectures, ward rounds and consultant offices are based. Surgery, Paediatrics, Obstetrics & Gynaecology and Community Health departments are also in the UITH complex. Not on the Main Campus: take a cab.",
+    "photo": "",
+    "campus": "uith",
+    "verified": false,
+    "source": "Google AI answer (Plus Code GJPW+96M, 8.5359, 4.6456), Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "department of medicine",
+      "medicine",
+      "clinical sciences",
+      "surgery",
+      "paediatrics",
+      "obstetrics",
+      "gynaecology",
+      "community health",
+      "uith clinical"
     ]
   }
 ]
