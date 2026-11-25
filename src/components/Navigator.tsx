@@ -18,7 +18,7 @@ type Tab = "main" | "cohs" | "uith";
 type NavTab = "explore" | "browse" | "saved" | "settings";
 const CAMPUS: Record<Tab, { label: string; center: [number, number]; zoom: number; hint: string }> = {
   main: { label: "Main Campus", center: [4.6727, 8.4805], zoom: 15.3, hint: "Search Unilorin" },
-  cohs: { label: "COHS & Colleges", center: [4.6495, 8.522], zoom: 15, hint: "Search COHS & Colleges" },
+  cohs: { label: "COHS & Colleges", center: [4.6505, 8.513], zoom: 15, hint: "Search COHS & Colleges" },
   uith: { label: "UITH", center: [4.6456, 8.5390], zoom: 15.5, hint: "Search UITH" },
 };
 const campusTab = (campus: string): Tab => campus === "cohs" ? "cohs" : campus === "uith" ? "uith" : "main";
@@ -38,7 +38,7 @@ const BLOCK_CENTERS = [
 const BLOCK_GEOJSON: GeoJSON.FeatureCollection = {
   type: "FeatureCollection",
   features: BLOCK_CENTERS.map(({ n, lat, lng }) => {
-    const dLat = 0.00011, dLng = 0.00022; // ~12m × 20m half-extents per block wing
+    const dLat = 0.00011, dLng = 0.00022;
     return {
       type: "Feature" as const,
       properties: { name: `Block ${n}`, n },
@@ -54,13 +54,11 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 const isDesktop = () => typeof window !== "undefined" && window.innerWidth >= 900;
 const hashFor = (t: Tab) => (t === "uith" ? "#uith" : t === "cohs" ? "#cohs" : "#main");
 
-// ---- motion helpers ----
 const reduced = () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-const tap = (ms = 8) => { try { navigator.vibrate?.(ms); } catch { /* not supported (e.g. iOS) */ } }; // tiny haptic tick on touch devices
+const tap = (ms = 8) => { try { navigator.vibrate?.(ms); } catch { /* not supported */ } };
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const KX = 111320 * Math.cos((8.48 * Math.PI) / 180), KY = 110574;
 const segLen = (a: [number, number], b: [number, number]) => Math.hypot((b[0] - a[0]) * KX, (b[1] - a[1]) * KY);
-/** true while `open`, and for `ms` after it closes, so things can animate OUT before unmounting */
 function useMounted(open: boolean, ms: number) {
   const [m, setM] = useState(open);
   useEffect(() => { if (open) { setM(true); return; } const t = setTimeout(() => setM(false), ms); return () => clearTimeout(t); }, [open, ms]);
@@ -82,8 +80,8 @@ export default function Navigator() {
   const watchId = useRef<number | null>(null);
   const routeRef = useRef<{ main: GeoJSON.FeatureCollection; alt: GeoJSON.FeatureCollection }>({ main: EMPTY, alt: EMPTY });
   const pending = useRef<Poi | null>(null), switchRef = useRef<(t: Tab) => void>(() => {});
-  const skipSave = useRef(false); // a fallback (e.g. Amazon outage) must not overwrite the user's saved choice
-  const awaiting = useRef(true); // true from 'asked for a style' until it has loaded
+  const skipSave = useRef(false);
+  const awaiting = useRef(true);
   const raf = useRef(0), markerEls = useRef<Map<string, HTMLElement>>(new Map());
   const poisRef = useRef<Poi[]>([]), pickRef = useRef<(p: Poi) => void>(() => {});
 
@@ -95,16 +93,15 @@ export default function Navigator() {
   const [cat, setCat] = useState<Category | null>(null);
   const [selected, setSelected] = useState<Poi | null>(null), [full, setFull] = useState(false);
   const [dir, setDir] = useState<Dir | null>(null);
-  // live navigation ("Start"): follow the walker's GPS dot along the chosen route
   const [mode, setMode] = useState<Mode>("walk"), modeRef = useRef<Mode>("walk");
   useEffect(() => {
     try { setSaveWalk(localStorage.getItem("unilorin-save-walk") === "1"); } catch { /* ignore */ }
-    setSharingState(getSharing()); void flushWalks(); // send walks recorded earlier (if the person chose to share)
+    setSharingState(getSharing()); void flushWalks();
     const online = () => void flushWalks(); window.addEventListener("online", online); return () => window.removeEventListener("online", online);
   }, []);
   const rememberSave = (v: boolean) => { setSaveWalk(v); try { localStorage.setItem("unilorin-save-walk", v ? "1" : "0"); } catch { /* ignore */ } };
   function onSaveToggle(checked: boolean) {
-    if (checked && getSharing() === null) { if (CAN_UPLOAD) { setConfirmDel(false); setConsentOpen(true); } else { setSharing("local"); setSharingState("local"); rememberSave(true); } return; } // first time: ask
+    if (checked && getSharing() === null) { if (CAN_UPLOAD) { setConfirmDel(false); setConsentOpen(true); } else { setSharing("local"); setSharingState("local"); rememberSave(true); } return; }
     rememberSave(checked);
   }
   function chooseSharing(c: "upload" | "local") {
@@ -126,13 +123,12 @@ export default function Navigator() {
   const navWatch = useRef<number | null>(null), navMarker = useRef<maplibregl.Marker | null>(null), navRoute = useRef<Prepared | null>(null), navDest = useRef<Poi | null>(null);
   const navMode = useRef<Mode>("walk"), navFollow = useRef(true), offCount = useRef(0), navHeading = useRef(0), firstFix = useRef(true), arrivedRef = useRef(false), rerouting = useRef(false), navAnim = useRef(0);
   const wake = useRef<{ release: () => Promise<void> } | null>(null);
-  // "Save my walk": GPS fixes kept on this phone (never uploaded) in the same store the /field collector exports
   const [saveWalk, setSaveWalk] = useState(false), [recording, setRecording] = useState(false);
   const [sharing, setSharingState] = useState<Sharing>(null), [consentOpen, setConsentOpen] = useState(false), [confirmDel, setConfirmDel] = useState(false), [busy, setBusy] = useState(false);
   const recPts = useRef<[number, number][]>([]), recId = useRef(""), recLabel = useRef(""), recKind = useRef("footpath"), recDest = useRef("");
   const [travel, setTravel] = useState(false), [drawer, setDrawer] = useState(false), [layerMenu, setLayerMenu] = useState(false), [navTab, setNavTab] = useState<NavTab>("explore");
   const [locOn, setLocOn] = useState(false), [locFix, setLocFix] = useState(false), [toast, setToast] = useState<string | null>(null), [zoomed, setZoomed] = useState(false), [dragY, setDragY] = useState<number | null>(null);
-  const [onboarded, setOnboarded] = useState(true); // true = already done, skip overlay
+  const [onboarded, setOnboarded] = useState(true);
   useEffect(() => { try { setOnboarded(!!localStorage.getItem("unilorin-onboarded")); } catch { setOnboarded(true); } }, []);
 
   const tabPois = useMemo(() => pois.filter((p) => p.campus === tab), [pois, tab]);
@@ -142,23 +138,18 @@ export default function Navigator() {
 
   useEffect(() => { if (!toast) return; const id = setTimeout(() => setToast(null), 9000); return () => clearTimeout(id); }, [toast]);
 
-  // ---------- camera: eased, slower for long hops (campus <-> UITH), instant if the user prefers reduced motion ----------
   function moveTo(opts: maplibregl.FlyToOptions, long = false) {
-    // `padding` on flyTo is remembered by the camera and silently shrinks every later fitBounds (a 1 km route ended up at zoom 12),
-    // so turn it into a one-off `offset` that is not remembered.
     const { padding, ...rest } = opts as maplibregl.FlyToOptions & { padding?: { top?: number; bottom?: number; left?: number; right?: number } };
     const offset: [number, number] | undefined = padding ? [((padding.left ?? 0) - (padding.right ?? 0)) / 2, ((padding.top ?? 0) - (padding.bottom ?? 0)) / 2] : undefined;
     map.current?.flyTo({ ...rest, ...(offset ? { offset } : {}), essential: true, duration: reduced() ? 0 : long ? 2200 : 1000, curve: long ? 1.6 : 1.42, easing: easeInOut });
   }
   const camera = () => ({ duration: reduced() ? 0 : 900, easing: easeInOut, essential: true });
 
-  // ---------- map overlays (re-added after every style change) ----------
   function addOverlays(m: maplibregl.Map) {
     const b = baseRef.current, sat = b === "sat", dark = b === "dark";
     if (!m.getSource("buildings")) m.addSource("buildings", { type: "geojson", data: buildings as any });
     if (!m.getLayer("buildings-fill")) m.addLayer({ id: "buildings-fill", type: "fill", source: "buildings", paint: { "fill-color": sat ? "#FFB74D" : dark ? "#F6A04D" : "#F9D9B0", "fill-opacity": sat ? 0.35 : dark ? 0.5 : 0.9 } });
     if (!m.getLayer("buildings-line")) m.addLayer({ id: "buildings-line", type: "line", source: "buildings", paint: { "line-color": sat ? "#FFB74D" : dark ? "#F6A04D" : "#F29900", "line-width": 2 } });
-    // Academic block outlines
     if (!m.getSource("blocks")) m.addSource("blocks", { type: "geojson", data: BLOCK_GEOJSON });
     if (!m.getLayer("blocks-fill")) m.addLayer({ id: "blocks-fill", type: "fill", source: "blocks", minzoom: 15, paint: { "fill-color": sat ? "#60A5FA" : dark ? "#3B82F6" : "#1A73E8", "fill-opacity": sat ? 0.08 : 0.1 } });
     if (!m.getLayer("blocks-line")) m.addLayer({ id: "blocks-line", type: "line", source: "blocks", minzoom: 15, paint: { "line-color": sat ? "#93C5FD" : dark ? "#60A5FA" : "#1A73E8", "line-width": 1.5, "line-dasharray": [4, 2] } });
@@ -175,9 +166,8 @@ export default function Navigator() {
   function applyLayers(m: maplibregl.Map) {
     const f = ["==", ["get", "id"], selRef.current ?? "__none__"] as any;
     for (const id of ["buildings-fill", "buildings-line"]) if (m.getLayer(id)) m.setFilter(id, f);
-    if (m.getLayer("paths-line")) m.setLayoutProperty("paths-line", "visibility", tabRef.current === "main" && location.search.includes("paths") ? "visible" : "none"); // dev overlay: /?paths
+    if (m.getLayer("paths-line")) m.setLayoutProperty("paths-line", "visibility", tabRef.current === "main" && location.search.includes("paths") ? "visible" : "none");
   }
-  /** Sets the route line; with `animate` the line draws itself from start to end. */
   function setRouteData(main: [number, number][] | null, alts: [number, number][][], animate = false) {
     cancelAnimationFrame(raf.current);
     routeRef.current = { main: main ? lines([main]) : EMPTY, alt: lines(alts) };
@@ -197,35 +187,32 @@ export default function Navigator() {
     raf.current = requestAnimationFrame(step);
   }
 
-  // ---------- map init ----------
   useEffect(() => {
     const initial = readBase(); baseRef.current = initial; setBase(initial);
     const m = new maplibregl.Map({ container: el.current!, style: getMapStyle(initial), center: CAMPUS.main.center, zoom: CAMPUS.main.zoom, attributionControl: false, pitchWithRotate: false, dragRotate: false });
     m.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
     m.on("style.load", () => { awaiting.current = false; addOverlays(m); setReady(true); });
-    // If the Amazon map can't be loaded (outage, bad key, offline) fall back to the standard map instead of leaving a blank screen.
     m.on("error", () => { if (awaiting.current && baseRef.current === "aws") { awaiting.current = false; setToast("Amazon Map isn't available right now, showing the standard map instead."); skipSave.current = true; setBase("map"); } });
     m.on("zoom", () => setZoomed(m.getZoom() >= 16));
-    m.on("dragstart", () => { if (navWatch.current !== null) { navFollow.current = false; setFollowing(false); } }); // the walker looked around: stop auto-following
+    m.on("dragstart", () => { if (navWatch.current !== null) { navFollow.current = false; setFollowing(false); } });
     m.on("click", (e) => { if (!(e.originalEvent.target as HTMLElement).closest(".gm-poi")) { setLayerMenu(false); } });
     map.current = m;
-    if (location.search.includes("debug")) (window as unknown as { __map?: maplibregl.Map }).__map = m; // test hook, only with ?debug
+    if (location.search.includes("debug")) (window as unknown as { __map?: maplibregl.Map }).__map = m;
     return () => { if (navWatch.current !== null) navigator.geolocation.clearWatch(navWatch.current); cancelAnimationFrame(navAnim.current); m.remove(); };
   }, []);
   const baseTouched = useRef(false);
   useEffect(() => {
-    if (!baseTouched.current) { baseTouched.current = true; return; } // first run = the value we just read, nothing to apply
+    if (!baseTouched.current) { baseTouched.current = true; return; }
     const m = map.current, box = el.current;
-    if (m) { // not gated on `ready`: even if the first style failed, switching views must still work
+    if (m) {
       awaiting.current = true;
       box?.classList.add("gm-fading");
       const clear = () => box?.classList.remove("gm-fading");
-      window.setTimeout(() => { m.setStyle(getMapStyle(base), { diff: false }); m.once("idle", clear); /* diff:false => always a full reload, so style.load fires and the overlays (route, buildings) are re-added */ window.setTimeout(clear, 2500); }, reduced() ? 0 : 140);
+      window.setTimeout(() => { m.setStyle(getMapStyle(base), { diff: false }); m.once("idle", clear); window.setTimeout(clear, 2500); }, reduced() ? 0 : 140);
     }
     if (skipSave.current) skipSave.current = false; else { try { localStorage.setItem("unilorin-base", base); } catch { /* ignore */ } }
   }, [base]);
 
-  // ---------- load data + deep links ----------
   useEffect(() => {
     try { setRecents(JSON.parse(localStorage.getItem("unilorin-recents") ?? "[]")); } catch { /* ignore */ }
     loadPois().then((ps) => {
@@ -243,7 +230,6 @@ export default function Navigator() {
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
-  // ---------- tab switch ----------
   function clearRoute() { setRouteData(null, []); startMarker.current?.remove(); startMarker.current = null; }
   function switchTab(t: Tab) {
     if (t === tab && !pending.current) return;
@@ -259,8 +245,6 @@ export default function Navigator() {
     else { moveTo({ center: CAMPUS[tab].center, zoom: CAMPUS[tab].zoom }, true); if (!location.hash.startsWith("#p=")) history.replaceState(null, "", hashFor(tab)); }
   }, [tab, ready, pois]);
 
-  // ---------- markers ----------
-  // Built only when the campus/category changes (so the staggered pop-in plays then, not on every tap).
   useEffect(() => {
     const m = map.current; if (!m) return;
     markers.current.forEach((k) => k.remove()); markerEls.current.clear();
@@ -273,7 +257,6 @@ export default function Navigator() {
       return new maplibregl.Marker({ element: d, anchor: "top" }).setLngLat([p.lng, p.lat]).addTo(m);
     });
   }, [tabPois, cat, ready]);
-  // the selected place shows the red pin instead of its dot
   useEffect(() => { markerEls.current.forEach((el, id) => el.classList.toggle("gm-hide", id === selected?.id)); }, [selected, tabPois, cat, ready]);
   useEffect(() => {
     selMarker.current?.remove(); selMarker.current = null;
@@ -290,7 +273,6 @@ export default function Navigator() {
     startMarker.current = new maplibregl.Marker({ element: d }).setLngLat([dir.start.lng, dir.start.lat]).addTo(map.current);
   }, [dir?.start]);
 
-  // ---------- search ----------
   const ql = q.trim().toLowerCase();
   const results = searchPois(tabPois, q), results2 = searchPois(otherPois, q);
   const matchAlias = (campus: string, same: boolean) => (ql.length >= 3 ? elsewhere.find((e) => (e.campus === campus) === same && e.terms.some((t) => ql.includes(t) || (e.prefix !== false && t.includes(ql)))) : undefined);
@@ -317,7 +299,6 @@ export default function Navigator() {
   const openTravel = () => { setSelected(null); setDir(null); clearRoute(); setQ(""); setFocus(false); setDrawer(false); setTravel(true); };
   function onEnter() { if (aliasElsewhere) jumpToAlias(); else if (results[0]) choosePin(results[0]); else if (results2[0]) choosePin(results2[0]); else if (travelHit) openTravel(); (document.activeElement as HTMLElement)?.blur(); }
 
-  // ---------- category chips ----------
   const cats = CHIP_ORDER.filter((c) => tabPois.some((p) => p.category === c));
   function toggleCat(c: Category) {
     const next = cat === c ? null : c; setCat(next); setSelected(null); setDir(null); clearRoute(); setTravel(false);
@@ -325,7 +306,6 @@ export default function Navigator() {
     if (next && list.length && map.current) { const b = new maplibregl.LngLatBounds(); list.forEach((p) => b.extend([p.lng, p.lat])); map.current.fitBounds(b, { padding: isDesktop() ? { left: 460, top: 90, right: 80, bottom: 80 } : { top: 130, bottom: 300, left: 50, right: 50 }, maxZoom: 17, ...camera() }); tap(); }
   }
 
-  // ---------- my location ----------
   function locateBeep() {
     try {
       const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -352,13 +332,11 @@ export default function Navigator() {
     }, (e) => { setToast(e.code === 1 ? "Allow location access to see where you are." : "Couldn't get your location."); setLocOn(false); setLocFix(false); }, { enableHighAccuracy: true, maximumAge: 5000 });
   }
 
-  // ---------- directions ----------
   function fit(coords: [number, number][]) {
     const m = map.current; if (!m || !coords.length) return; const b = new maplibregl.LngLatBounds(); coords.forEach((c) => b.extend(c));
-    // keep the route clear of the top card (measured) and the bottom sheet, like Google does
     const h = el.current?.clientHeight ?? 700, mapTop = el.current?.getBoundingClientRect().top ?? 0;
     const bar = document.querySelector(".gm-dir")?.getBoundingClientRect();
-    const top = bar ? Math.max(120, bar.bottom - mapTop + 14) : 170, bottom = Math.min(380, Math.max(270, Math.round(h * 0.42) + 30)); /* route sheet incl. the Start button + the height of the destination pin */
+    const top = bar ? Math.max(120, bar.bottom - mapTop + 14) : 170, bottom = Math.min(380, Math.max(270, Math.round(h * 0.42) + 30));
     m.fitBounds(b, { padding: isDesktop() ? { left: 460, top: 100, right: 100, bottom: 100 } : { top, bottom, left: 44, right: 44 }, maxZoom: 18, ...camera() });
   }
   function compute(dest: Poi, start: Start, active = 0) {
@@ -384,7 +362,6 @@ export default function Navigator() {
   }
   function closeDirections() { setDir(null); clearRoute(); }
 
-  // ---------- live navigation ----------
   const arriveClock = (min: number) => new Date(Date.now() + min * 60000).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   function moveNavDot(to: [number, number], heading: number) {
     const m = map.current; if (!m) return;
@@ -392,7 +369,7 @@ export default function Navigator() {
     const mk = navMarker.current; mk.getElement().style.setProperty("--hd", `${heading - m.getBearing()}deg`);
     const f = mk.getLngLat(), from: [number, number] = [f.lng, f.lat]; cancelAnimationFrame(navAnim.current);
     if (reduced() || (from[0] === to[0] && from[1] === to[1])) { mk.setLngLat(to); return; }
-    const t0 = performance.now(), D = 700; // glide between GPS fixes so the dot moves smoothly like Google's
+    const t0 = performance.now(), D = 700;
     const step = (now: number) => { const t = Math.min(1, (now - t0) / D); mk.setLngLat([from[0] + (to[0] - from[0]) * t, from[1] + (to[1] - from[1]) * t]); if (t < 1) navAnim.current = requestAnimationFrame(step); };
     navAnim.current = requestAnimationFrame(step);
   }
@@ -409,7 +386,7 @@ export default function Navigator() {
   function flushWalk(final: boolean): boolean {
     const pts = recPts.current; if (!recId.current) return false;
     const meters = Math.round(pts.slice(1).reduce((t, c, i) => t + metersBetween(pts[i], c), 0));
-    if (pts.length < 5 || meters < 30) return false; // too short to be a useful path
+    if (pts.length < 5 || meters < 30) return false;
     const st = loadState(), track = { id: recId.current, from: "walk", to: recDest.current, label: recLabel.current, kind: recKind.current, points: pts.map((c) => [+c[0].toFixed(6), +c[1].toFixed(6)] as [number, number]), ts: new Date().toISOString(), meters };
     const i = st.tracks.findIndex((t) => t.id === track.id); if (i >= 0) st.tracks[i] = track; else st.tracks.push(track);
     saveState(st);
@@ -419,9 +396,9 @@ export default function Navigator() {
   function onNavFix(p: GeolocationPosition) {
     const r = navRoute.current, m = map.current; if (!r || !m || arrivedRef.current) return;
     const raw: [number, number] = [p.coords.longitude, p.coords.latitude], acc = p.coords.accuracy || 20;
-    if (recId.current && acc <= 25) { // keep good fixes only, at least 4 m apart
+    if (recId.current && acc <= 25) {
       const last = recPts.current[recPts.current.length - 1];
-      if (!last || metersBetween(last, raw) >= 4) { recPts.current.push(raw); if (recPts.current.length % 10 === 0) flushWalk(false); } // autosave so a closed tab loses little
+      if (!last || metersBetween(last, raw) >= 4) { recPts.current.push(raw); if (recPts.current.length % 10 === 0) flushWalk(false); }
     }
     const s = snapToRoute(r, raw), onRoute = s.offM <= Math.max(35, acc);
     const shown: [number, number] = onRoute ? s.point : raw;
@@ -429,7 +406,7 @@ export default function Navigator() {
     navHeading.current = firstFix.current ? s.bearing : smoothHeading(navHeading.current, moving ? p.coords.heading! : s.bearing);
     const remain = onRoute ? s.remaining : s.remaining + s.offM, min = minutesLeft(remain, navPace());
     if (!onRoute) {
-      offCount.current += firstFix.current ? 3 : 1; // the very first fix is judged at once, later ones need 3 in a row
+      offCount.current += firstFix.current ? 3 : 1;
       if (offCount.current >= 3 && acc <= 80) { firstFix.current = false; reroute(raw); }
     } else { offCount.current = 0; setRouteData(remainingLine(r, s), []); }
     moveNavDot(shown, navHeading.current);
@@ -451,7 +428,7 @@ export default function Navigator() {
     if (!dir || !dir.routes.length) return;
     if (!navigator.geolocation) { setToast("Location is not available on this device."); return; }
     tap();
-    if (watchId.current !== null) { navigator.geolocation.clearWatch(watchId.current); watchId.current = null; } // navigation does its own tracking
+    if (watchId.current !== null) { navigator.geolocation.clearWatch(watchId.current); watchId.current = null; }
     meMarker.current?.remove(); meMarker.current = null; setLocOn(false); setLocFix(false);
     recPts.current = []; recId.current = saveWalk ? String(Date.now()) : ""; recDest.current = dir.dest.id; recKind.current = (dir.routes[dir.active].mode ?? "walk") === "cab" ? "road" : "footpath";
     recLabel.current = `Walked: ${dir.start?.name ?? "Your location"} to ${dir.dest.name}`; setRecording(saveWalk);
@@ -462,7 +439,7 @@ export default function Navigator() {
     try { (navigator as unknown as { wakeLock?: { request: (t: string) => Promise<{ release: () => Promise<void> }> } }).wakeLock?.request("screen").then((l) => { wake.current = l; }).catch(() => {}); } catch { /* optional */ }
     navWatch.current = navigator.geolocation.watchPosition(onNavFix, (e) => {
       if (e.code === 1) { setToast("Allow location access to navigate."); exitNav(); }
-      else if (firstFix.current) setToast("Waiting for a GPS signal…"); // only while we have never had a fix; a resting phone may pause updates
+      else if (firstFix.current) setToast("Waiting for a GPS signal…");
     }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 60000 });
   }
   function exitNav(toOverview = true) {
@@ -474,20 +451,19 @@ export default function Navigator() {
     navRoute.current = null; navDest.current = null; arrivedRef.current = false;
     setNav(null); setFollowing(true);
     const m = map.current; m?.easeTo({ bearing: 0, pitch: 0, duration: reduced() ? 0 : 600 });
-    if (toOverview && dir) show(dir.routes, dir.active); // back to the whole-route view
+    if (toOverview && dir) show(dir.routes, dir.active);
   }
   function finishNav() { const d = nav?.dest; exitNav(false); closeDirections(); if (d) setSelected(d); }
   function recenter() { tap(); navFollow.current = true; setFollowing(true); const p = navMarker.current?.getLngLat(), m = map.current; if (p && m) m.easeTo({ center: p, zoom: Math.max(m.getZoom(), 17.5), bearing: navHeading.current, offset: [0, Math.round((m.getContainer().clientHeight || 600) * 0.16)], duration: reduced() ? 0 : 700, essential: true }); }
-  useEffect(() => { if (!dir && nav) exitNav(false); }, [dir]); // leaving directions (tab switch, back) ends navigation
+  useEffect(() => { if (!dir && nav) exitNav(false); }, [dir]);
   function swap() { if (!dir?.start || dir.start.id === "gps") return; const s = tabPois.find((p) => p.id === dir.start!.id); if (!s) return; setSelected(s); compute(s, { id: dir.dest.id, name: dir.dest.name, lat: dir.dest.lat, lng: dir.dest.lng }); }
   const startOptions = useMemo(() => (dir ? tabPois.filter((p) => p.id !== dir.dest.id && p.name.toLowerCase().includes(dir.sq.trim().toLowerCase())).slice(0, 8) : []), [dir?.sq, dir?.dest.id, tabPois]);
 
-  // ---------- sheet: drag, snapshot (kept so it can animate out), share ----------
   const listView = !!cat && !selected && !dir && !travel;
   const view = nav ? null : travel ? "travel" : dir ? "dir" : selected ? "place" : listView ? "list" : null;
   const snap = useRef<{ view: "travel" | "dir" | "place" | "list"; selected: Poi | null; dir: Dir | null; cat: Category | null } | null>(null);
   if (view) snap.current = { view, selected, dir, cat };
-  const S = view ? { view, selected, dir, cat } : snap.current; // while closing, keep showing the last content
+  const S = view ? { view, selected, dir, cat } : snap.current;
   const sheetMounted = useMounted(!!view, 300);
   const sheetUp = view !== null && !(view === "place" && full);
   const lastToast = useRef(""); if (toast) lastToast.current = toast;
@@ -496,10 +472,10 @@ export default function Navigator() {
   const closeCurrent = () => (view === "list" ? setCat(null) : closeSheet());
   const dragState = useRef<{ y0: number; t0: number } | null>(null);
   const onDown = (e: React.PointerEvent) => { dragState.current = { y0: e.clientY, t0: performance.now() }; e.currentTarget.setPointerCapture(e.pointerId); };
-  const onMove = (e: React.PointerEvent) => { const d = dragState.current; if (!d) return; const dy = e.clientY - d.y0; setDragY(dy < 0 ? Math.max(dy * 0.4, -60) : dy); }; // rubber-band when pulling up
+  const onMove = (e: React.PointerEvent) => { const d = dragState.current; if (!d) return; const dy = e.clientY - d.y0; setDragY(dy < 0 ? Math.max(dy * 0.4, -60) : dy); };
   const onUp = (e: React.PointerEvent) => {
     const d = dragState.current; dragState.current = null; setDragY(null); if (!d) return;
-    const dy = e.clientY - d.y0, v = dy / Math.max(1, performance.now() - d.t0); // px per ms: lets a quick flick count
+    const dy = e.clientY - d.y0, v = dy / Math.max(1, performance.now() - d.t0);
     if (Math.abs(dy) < 6) { setFull((f) => !f); tap(); return; }
     if (dy < -40 || v < -0.5) { setFull(true); tap(); }
     else if (dy > 60 || v > 0.5) { if (full && view === "place") { setFull(false); tap(); } else closeCurrent(); }
@@ -521,7 +497,6 @@ export default function Navigator() {
       <div ref={el} className={`gm-map ${zoomed ? "z16" : ""}`} />
       <div className="gm-panelbg" />
 
-      {/* ---- top: search pill or directions card ---- */}
       <div className="gm-top">
         {nav ? (
           <div className={`gm-navtop ${navInfo.arrived ? "done" : ""}`} role="status" aria-live="polite">
@@ -574,20 +549,17 @@ export default function Navigator() {
           </div>)}
       </div>
 
-      {/* ---- campus tabs ---- */}
       {navTab === "explore" && !dir && !nav && (
         <div className="gm-camtabs" key={`ct-${tab}`}>
           {(Object.keys(CAMPUS) as Tab[]).map((t) => (
             <button key={t} className={`gm-camtab ${tab === t ? "on" : ""}`} onClick={() => { switchTab(t); tap(); }}>{CAMPUS[t].label}</button>
           ))}
         </div>)}
-      {/* ---- chips (re-keyed per campus so they animate in again) ---- */}
       {!dir && navTab === "explore" && (
         <div className="gm-chips" key={tab}>
           {cats.map((c, i) => <button key={c} className={`gm-chip ${cat === c ? "on" : ""}`} style={{ "--i": i } as React.CSSProperties} onClick={() => toggleCat(c)} aria-pressed={cat === c}><Icon name={CAT[c].icon} size={18} color={cat === c ? "#174EA6" : CAT[c].color} />{CAT[c].label}</button>)}
         </div>)}
 
-      {/* ---- map controls ---- */}
       {!dir && navTab === "explore" && (
         <div className="gm-ctrl">
           <button className="gm-sqbtn" aria-label="Map layers" onClick={() => { setLayerMenu((v) => !v); tap(); }}><Icon name="layers" /></button>
@@ -603,7 +575,6 @@ export default function Navigator() {
         </button>
       )}
 
-      {/* ---- bottom sheet / side panel (one element; content swaps, it slides in/out and follows the finger) ---- */}
       {sheetMounted && S && (
         <section className={`gm-sheet ${sheetClass} ${view ? "open" : "closing"}`} aria-label={sel?.name ?? "Details"} aria-hidden={!view}
           style={dragY !== null ? { transform: `translateY(${dragY}px)`, transition: "none" } : undefined}>
@@ -692,7 +663,6 @@ export default function Navigator() {
       {tab === "uith" && !view && navTab === "explore" && <div className="gm-note"><b>University of Ilorin Teaching Hospital</b><br />Only the hospital grounds are mapped so far, wards, departments and emergency routes will be added after a site visit.<button onClick={openTravel}>Coming from the Main Campus? How to get here</button></div>}
       {tab === "cohs" && !view && navTab === "explore" && <div className="gm-note"><b>College of Health Sciences</b><br />Old College class area and New College lecture halls are pinned. More buildings will be added after a site visit.<button onClick={openTravel}>Coming from the Main Campus? How to get here</button></div>}
 
-      {/* ---- drawer ---- */}
       <Presence open={drawer} ms={260}>{(closing) => (<>
         <div className={`gm-scrim ${closing ? "out" : ""}`} onClick={() => setDrawer(false)} />
         <aside className={`gm-drawer ${closing ? "out" : ""}`} aria-label="Menu">
@@ -705,7 +675,6 @@ export default function Navigator() {
           <p className="gm-fine">Map data © OpenStreetMap contributors. Icons: Material Icons (Apache-2.0).</p>
         </aside></>)}</Presence>
 
-      {/* ---- Browse screen ---- */}
       {navTab === "browse" && (
         <div className="gm-screen">
           <div className="gm-screen-head"><h2>Browse</h2><p>{CAMPUS[tab].label}</p></div>
@@ -730,7 +699,6 @@ export default function Navigator() {
               </div>}
         </div>)}
 
-      {/* ---- Saved screen ---- */}
       {navTab === "saved" && (
         <div className="gm-screen">
           <div className="gm-screen-head"><h2>Saved</h2><p>Your recent places</p></div>
@@ -743,7 +711,6 @@ export default function Navigator() {
                 </button>))}
         </div>)}
 
-      {/* ---- Settings screen ---- */}
       {navTab === "settings" && (
         <div className="gm-screen">
           <div className="gm-screen-head"><h2>Settings</h2><p>Map style and options</p></div>
@@ -774,7 +741,6 @@ export default function Navigator() {
           <p className="gm-fine" style={{ padding: "16px 16px 32px" }}>Map data &copy; OpenStreetMap contributors. Icons: Material Icons (Apache-2.0).</p>
         </div>)}
 
-      {/* ---- bottom navigation bar ---- */}
       <nav className="gm-bottomnav" aria-label="Main navigation">
         <button className={`gm-navitem ${navTab === "explore" ? "on" : ""}`} onClick={() => { setNavTab("explore"); tap(); }} aria-label="Explore">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
@@ -828,7 +794,7 @@ export default function Navigator() {
       {nav && (
         <div className="gm-navbar">
           <button className="gm-navx" onClick={() => (navInfo.arrived ? finishNav() : exitNav())}>{navInfo.arrived ? "Done" : "Exit"}</button>
-          <div className="gm-navstats">{navInfo.arrived ? <b>You are at {nav.dest.name}</b> : navInfo.wait ? <b>Finding your location…</b> : <><b><Icon name={nav.mode === "cab" ? "car" : "walk"} size={20} color="#188038" /> {navInfo.minutes} min</b><span>{fmtDist(navInfo.remain)} · arrive {navInfo.arrive}</span>{recording && <small className="gm-rec-on">Saving this walk</small>}</></div>
+          <div className="gm-navstats">{navInfo.arrived ? <b>You are at {nav.dest.name}</b> : navInfo.wait ? <b>Finding your location…</b> : <><b><Icon name={nav.mode === "cab" ? "car" : "walk"} size={20} color="#188038" /> {navInfo.minutes} min</b><span>{fmtDist(navInfo.remain)} · arrive {navInfo.arrive}</span>{recording && <small className="gm-rec-on">Saving this walk</small>}</></>}</div>
         </div>)}
       {nav && !following && !navInfo.arrived && <button className="gm-recenter" onClick={recenter}><Icon name="navigate" size={18} color="#1a73e8" /> Re-center</button>}
       <Presence open={!!toast} ms={240}>{(closing) => (
