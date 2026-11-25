@@ -624,24 +624,28 @@ export default function Navigator() {
                     : <button className="gm-btn fill" onClick={() => { openDirections(sel); tap(); }}><Icon name="directions" size={20} color="#fff" />Directions</button>}
                   <button className="gm-btn" onClick={() => { share(sel); tap(); }}><Icon name="share" size={20} />Share</button>
                 </div>
-                <div className="gm-photo">{sel.photo ? <img src={sel.photo} alt={sel.name} loading="lazy" /> : <><Icon name="photo" size={32} color="#9aa0a6" /><span>No photo yet</span></>}</div>
-                {sel.block != null && <div className="gm-info"><span className="gm-block-badge">Block {sel.block}</span><span>Walkway / Skyway complex · Main Campus</span></div>}
-                {sel.description && <div className="gm-info"><Icon name="info" size={22} color="#1a73e8" /><span>{sel.description}</span></div>}
                 {sel.block != null && (() => {
                   const siblings = pois.filter((p) => p.block === sel.block && p.id !== sel.id);
-                  if (!siblings.length) return null;
                   return (
                     <div className="gm-block-siblings">
-                      <p className="gm-block-siblings-hd">Also in Block {sel.block}</p>
-                      {siblings.map((p) => (
-                        <button key={p.id} className="gm-block-sibling" onClick={() => choosePin(p)}>
-                          <Icon name={CAT[p.category]?.icon ?? "place"} size={18} color={CAT[p.category]?.color} />
-                          <span>{p.name}</span>
-                        </button>
-                      ))}
+                      <div className="gm-block-siblings-top">
+                        <span className="gm-block-badge">Block {sel.block}</span>
+                        <span className="gm-block-siblings-loc">Walkway / Skyway complex</span>
+                      </div>
+                      {siblings.length > 0 && <>
+                        <p className="gm-block-siblings-hd">Also in Block {sel.block}</p>
+                        {siblings.map((p) => (
+                          <button key={p.id} className="gm-block-sibling" onClick={() => choosePin(p)}>
+                            <Icon name={CAT[p.category]?.icon ?? "place"} size={18} color={CAT[p.category]?.color} />
+                            <span>{p.name}</span>
+                          </button>
+                        ))}
+                      </>}
                     </div>
                   );
                 })()}
+                <div className="gm-photo">{sel.photo ? <img src={sel.photo} alt={sel.name} loading="lazy" /> : <><Icon name="photo" size={32} color="#9aa0a6" /><span>No photo yet</span></>}</div>
+                {sel.description && <div className="gm-info"><Icon name="info" size={22} color="#1a73e8" /><span>{sel.description}</span></div>}
                 <button className="gm-info click" onClick={() => copyCoords(sel)}><Icon name="place" size={22} color="#1a73e8" /><span>{sel.lat.toFixed(6)}, {sel.lng.toFixed(6)}</span><Icon name="copy" size={18} color="#5f6368" /></button>
                 <div className="gm-info"><Icon name="verified" size={22} color={sel.verified === false ? "#9aa0a6" : "#188038"} /><span>{sel.verified === false ? "Not yet confirmed, position from OpenStreetMap" : "Confirmed on the ground"}</span></div>
                 {(sel.campus === "uith" || sel.campus === "cohs") && <button className="gm-info click" onClick={openTravel}><Icon name="taxi" size={22} color="#1a73e8" /><span>Coming from the Main Campus? How to get here</span></button>}
