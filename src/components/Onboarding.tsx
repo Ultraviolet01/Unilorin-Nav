@@ -226,12 +226,8 @@ export default function Onboarding({ onDone }: { onDone: (tab: Tab) => void }) {
           <div className="ob-campus-cards">
             {CAMPUSES.map((c) => (
               <button key={c.id} className="ob-campus-card" onClick={() => finish(c.id)}>
-                <div className="ob-campus-thumb" style={{ background: c.color + "18" }}>
-                  <svg width="36" height="36" viewBox="0 0 24 24" fill={c.color}>
-                    {c.id === "uith"
-                      ? <path d="M19 3H5c-1.1 0-1.99.9-1.99 2L3 19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 11h-4v4h-4v-4H6v-4h4V6h4v4h4v4z"/>
-                      : <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>}
-                  </svg>
+                <div className="ob-campus-thumb">
+                  <img src={`/photos/${c.id}.jpg`} alt={c.name} className="ob-campus-photo" />
                 </div>
                 <div className="ob-campus-info">
                   <span className="ob-campus-name">{c.name}</span>
