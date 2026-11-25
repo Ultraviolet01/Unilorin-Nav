@@ -815,5 +815,17 @@
       "community health",
       "uith clinical"
     ]
+  },
+  {
+    "id": "chapel-of-the-light",
+    "name": "Chapel of the Light",
+    "category": "worship",
+    "lat": 8.4763785,
+    "lng": 4.6734716,
+    "description": "Interdenominational university chapel founded 1977. Sunday services: 7:30 AM and 10:00 AM. Wheelchair-accessible.",
+    "photo": "",
+    "campus": "main",
+    "verified": true,
+    "source": "Google Maps g/1yg4v7gqh"
   }
 ]
