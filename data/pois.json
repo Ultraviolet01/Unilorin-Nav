@@ -527,11 +527,11 @@
   },
   {
     "id": "old-college-class-area",
-    "name": "Old College (Class Area), College of Health Sciences",
+    "name": "Old College Lecture Rooms (LR Block)",
     "category": "lecture",
     "lat": 8.533,
     "lng": 4.6483,
-    "description": "Class area of the Old College (College of Health Sciences). Not on the Main Campus: take a cab. Position is approximate (within about 150 m).",
+    "description": "The LR Block at Old College (College of Health Sciences) - contains lecture rooms LR1, LR2, LR3 and others. Individual rooms share this single map location as they are inside one building wing. Not on the Main Campus: take a cab. Position approximate (within ~150 m).",
     "photo": "",
     "campus": "cohs",
     "verified": false,
@@ -540,7 +540,13 @@
       "old college",
       "class area",
       "college of health sciences",
-      "old college class area"
+      "old college class area",
+      "old college lr",
+      "lr block",
+      "lecture rooms",
+      "lr1",
+      "lr2",
+      "lr3"
     ]
   },
   {
@@ -581,6 +587,22 @@
       "lecture hall a",
       "new college lecture hall",
       "lecture hall"
+    ]
+  },
+  {
+    "id": "new-college-lecture-hall-b",
+    "name": "New College Lecture Hall B",
+    "category": "lecture",
+    "lat": 8.5119468,
+    "lng": 4.6498487,
+    "description": "Lecture Hall B at the New College. Located about 90 m east of Lecture Hall A on the same complex. Position approximate.",
+    "photo": "",
+    "campus": "cohs",
+    "verified": false,
+    "source": "Coordinates from project team screenshot (8.51195, 4.64985), Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "lecture hall b",
+      "new college lecture hall b"
     ]
   },
   {
