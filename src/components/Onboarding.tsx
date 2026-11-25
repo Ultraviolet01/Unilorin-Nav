@@ -83,40 +83,51 @@ function PageDots({ total, active }: { total: number; active: number }) {
   );
 }
 
+type ScreenAnim = "enter" | "exit" | "fade-enter" | "fade-exit";
+
 export default function Onboarding({ onDone }: { onDone: (tab: Tab) => void }) {
   const [step, setStep] = useState<Step>("splash");
-  const [animDir, setAnimDir] = useState<"in" | "out">("in");
+  const [anim, setAnim] = useState<ScreenAnim>("fade-enter");
   const [mounted, setMounted] = useState(false);
   const splashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const busy = useRef(false);
 
   useEffect(() => {
-    // Fade in on mount
     const t = setTimeout(() => setMounted(true), 40);
     return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
     if (step === "splash") {
-      splashTimer.current = setTimeout(() => advance(), 2200);
+      splashTimer.current = setTimeout(() => advance(true), 2200);
       return () => { if (splashTimer.current) clearTimeout(splashTimer.current); };
     }
   }, [step]);
 
-  function advance() {
+  function transition(nextStep: Step, fromSplash = false) {
+    if (busy.current) return;
+    busy.current = true;
+    const exitAnim: ScreenAnim = fromSplash ? "fade-exit" : "exit";
+    setAnim(exitAnim);
+    setTimeout(() => {
+      setStep(nextStep);
+      setAnim(fromSplash ? "fade-enter" : "enter");
+      setTimeout(() => { busy.current = false; }, 380);
+    }, fromSplash ? 300 : 240);
+  }
+
+  function advance(fromSplash = false) {
     const idx = STEPS.indexOf(step);
-    if (idx < STEPS.length - 1) {
-      setAnimDir("out");
-      setTimeout(() => { setStep(STEPS[idx + 1]); setAnimDir("in"); }, 180);
-    }
+    if (idx < STEPS.length - 1) transition(STEPS[idx + 1], fromSplash);
   }
 
   function skip() {
-    setAnimDir("out");
-    setTimeout(() => { setStep("campus"); setAnimDir("in"); }, 180);
+    transition("campus");
   }
 
   function finish(tab: Tab) {
-    setAnimDir("out");
+    busy.current = true;
+    setAnim("fade-exit");
     setMounted(false);
     setTimeout(() => onDone(tab), 320);
   }
@@ -131,11 +142,11 @@ export default function Onboarding({ onDone }: { onDone: (tab: Tab) => void }) {
   const welcomeIdx = step === "w1" ? 0 : step === "w2" ? 1 : step === "w3" ? 2 : 0;
 
   return (
-    <div className={`ob-wrap ${mounted && animDir === "in" ? "in" : ""}`} role="dialog" aria-modal="true">
+    <div className={`ob-wrap ${mounted ? "in" : ""}`} role="dialog" aria-modal="true">
 
       {/* ---- S01 Splash ---- */}
       {step === "splash" && (
-        <div className="ob-screen splash">
+        <div className={`ob-screen splash ob-anim-${anim}`}>
           <div className="ob-splash-body">
             <SplashIllustration />
             <h1 className="ob-app-name">Navigate<br />Unilorin</h1>
@@ -149,7 +160,7 @@ export default function Onboarding({ onDone }: { onDone: (tab: Tab) => void }) {
 
       {/* ---- S02-S04 Welcome slides ---- */}
       {(step === "w1" || step === "w2" || step === "w3") && (
-        <div className="ob-screen welcome">
+        <div className={`ob-screen welcome ob-anim-${anim}`}>
           <div className="ob-map-area">
             {step === "w1" && <MapIllustration variant="pins" />}
             {step === "w2" && <MapIllustration variant="offline" />}
@@ -178,17 +189,17 @@ export default function Onboarding({ onDone }: { onDone: (tab: Tab) => void }) {
             </>)}
             {step !== "w3"
               ? (<>
-                  <button className="ob-btn primary" onClick={advance}>Next</button>
+                  <button className="ob-btn primary" onClick={() => advance()}>Next</button>
                   <button className="ob-btn ghost" onClick={skip}>Skip</button>
                 </>)
-              : <button className="ob-btn primary" onClick={advance}>Get started</button>}
+              : <button className="ob-btn primary" onClick={() => advance()}>Get started</button>}
           </div>
         </div>
       )}
 
       {/* ---- S05 Location permission ---- */}
       {step === "location" && (
-        <div className="ob-screen location">
+        <div className={`ob-screen location ob-anim-${anim}`}>
           <LocationIllustration />
           <div className="ob-loc-text">
             <h2 className="ob-sh-title">Show me on the map</h2>
@@ -196,7 +207,7 @@ export default function Onboarding({ onDone }: { onDone: (tab: Tab) => void }) {
           </div>
           <div className="ob-loc-actions">
             <button className="ob-btn primary" onClick={requestLocation}>Allow location</button>
-            <button className="ob-btn outline" onClick={advance}>Not now</button>
+            <button className="ob-btn outline" onClick={() => advance()}>Not now</button>
             <p className="ob-fine-note">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
               The map works without it.
@@ -207,7 +218,7 @@ export default function Onboarding({ onDone }: { onDone: (tab: Tab) => void }) {
 
       {/* ---- S06 Campus picker ---- */}
       {step === "campus" && (
-        <div className="ob-screen campus">
+        <div className={`ob-screen campus ob-anim-${anim}`}>
           <div className="ob-campus-header">
             <h2 className="ob-sh-title" style={{ fontSize: 26 }}>Where are you headed?</h2>
             <p className="ob-sh-sub">Pick a campus to load. You can switch anytime.</p>

@@ -297,6 +297,15 @@ button.gm-row:active{transform:scale(.985)}
 .ob-splash-bar{width:160px;height:4px;background:rgba(255,255,255,.25);border-radius:2px;margin-bottom:60px;overflow:hidden}
 .ob-splash-fill{height:100%;border-radius:2px;background:#fff;animation:splashLoad 2s ease-in-out forwards}
 @keyframes splashLoad{from{width:0}to{width:100%}}
+/* onboarding screen transitions */
+@keyframes obEnter{from{opacity:0;transform:translateX(32px)}to{opacity:1;transform:none}}
+@keyframes obExit{from{opacity:1;transform:none}to{opacity:0;transform:translateX(-28px)}}
+@keyframes obFadeIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+@keyframes obFadeOut{from{opacity:1;transform:none}to{opacity:0;transform:scale(1.03)}}
+.ob-anim-enter{animation:obEnter .36s cubic-bezier(.25,.46,.45,.94) both}
+.ob-anim-exit{animation:obExit .22s cubic-bezier(.55,0,1,.45) both;pointer-events:none}
+.ob-anim-fade-enter{animation:obFadeIn .34s cubic-bezier(.25,.46,.45,.94) both}
+.ob-anim-fade-exit{animation:obFadeOut .28s cubic-bezier(.55,0,1,.45) both;pointer-events:none}
 /* welcome map area */
 .ob-map-area{flex:1;position:relative;overflow:hidden;background:#f1f3f4;min-height:0}
 .ob-map-wrap{width:100%;height:100%;position:relative}
