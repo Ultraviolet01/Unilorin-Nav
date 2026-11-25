@@ -26,6 +26,29 @@ const BASES: [Base, string, string][] = [["map", "Map", "Map view"], ["dark", "D
 const readBase = (): Base => { try { const b = localStorage.getItem("unilorin-base") as Base | null; if (b && BASES.some((x) => x[0] === b)) return b; } catch { /* ignore */ } return "sat"; };
 const EMPTY: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 const lines = (cs: [number, number][][]): GeoJSON.FeatureCollection => ({ type: "FeatureCollection", features: cs.map((c) => ({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: c } })) });
+
+// Academic block centres (Walkway/Skyway complex, Main Campus)
+const BLOCK_CENTERS = [
+  { n: 1, lat: 8.4791, lng: 4.6708 }, { n: 2, lat: 8.4793, lng: 4.6712 },
+  { n: 3, lat: 8.4796, lng: 4.6716 }, { n: 4, lat: 8.4798, lng: 4.6720 },
+  { n: 5, lat: 8.4800, lng: 4.6724 }, { n: 6, lat: 8.4803, lng: 4.6728 },
+  { n: 7, lat: 8.4806, lng: 4.6733 }, { n: 8, lat: 8.4808, lng: 4.6738 },
+  { n: 9, lat: 8.4810, lng: 4.6742 }, { n: 10, lat: 8.4812, lng: 4.6745 },
+];
+const BLOCK_GEOJSON: GeoJSON.FeatureCollection = {
+  type: "FeatureCollection",
+  features: BLOCK_CENTERS.map(({ n, lat, lng }) => {
+    const dLat = 0.00011, dLng = 0.00022; // ~12m × 20m half-extents per block wing
+    return {
+      type: "Feature" as const,
+      properties: { name: `Block ${n}`, n },
+      geometry: {
+        type: "Polygon" as const,
+        coordinates: [[[lng - dLng, lat - dLat], [lng + dLng, lat - dLat], [lng + dLng, lat + dLat], [lng - dLng, lat + dLat], [lng - dLng, lat - dLat]]],
+      },
+    };
+  }),
+};
 const fmtDist = (m: number) => (m < 1000 ? `${Math.max(10, Math.round(m / 10) * 10)} m` : `${(m / 1000).toFixed(1)} km`);
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 const isDesktop = () => typeof window !== "undefined" && window.innerWidth >= 900;
@@ -135,6 +158,11 @@ export default function Navigator() {
     if (!m.getSource("buildings")) m.addSource("buildings", { type: "geojson", data: buildings as any });
     if (!m.getLayer("buildings-fill")) m.addLayer({ id: "buildings-fill", type: "fill", source: "buildings", paint: { "fill-color": sat ? "#FFB74D" : dark ? "#F6A04D" : "#F9D9B0", "fill-opacity": sat ? 0.35 : dark ? 0.5 : 0.9 } });
     if (!m.getLayer("buildings-line")) m.addLayer({ id: "buildings-line", type: "line", source: "buildings", paint: { "line-color": sat ? "#FFB74D" : dark ? "#F6A04D" : "#F29900", "line-width": 2 } });
+    // Academic block outlines
+    if (!m.getSource("blocks")) m.addSource("blocks", { type: "geojson", data: BLOCK_GEOJSON });
+    if (!m.getLayer("blocks-fill")) m.addLayer({ id: "blocks-fill", type: "fill", source: "blocks", minzoom: 15, paint: { "fill-color": sat ? "#60A5FA" : dark ? "#3B82F6" : "#1A73E8", "fill-opacity": sat ? 0.08 : 0.1 } });
+    if (!m.getLayer("blocks-line")) m.addLayer({ id: "blocks-line", type: "line", source: "blocks", minzoom: 15, paint: { "line-color": sat ? "#93C5FD" : dark ? "#60A5FA" : "#1A73E8", "line-width": 1.5, "line-dasharray": [4, 2] } });
+    if (!m.getLayer("blocks-label")) m.addLayer({ id: "blocks-label", type: "symbol", source: "blocks", minzoom: 16, layout: { "text-field": ["get", "name"], "text-size": 11, "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"], "text-anchor": "center" }, paint: { "text-color": sat ? "#BFDBFE" : dark ? "#93C5FD" : "#1A73E8", "text-halo-color": sat ? "rgba(0,0,0,.7)" : dark ? "rgba(0,0,0,.7)" : "rgba(255,255,255,.9)", "text-halo-width": 1.5 } });
     if (!m.getSource("paths")) m.addSource("paths", { type: "geojson", data: paths as any });
     if (!m.getLayer("paths-line")) m.addLayer({ id: "paths-line", type: "line", source: "paths", minzoom: 15, paint: { "line-width": 1.5, "line-opacity": 0.75, "line-color": ["match", ["get", "kind"], "road", "#FFFFFF", "covered", "#FDE047", "#22D3EE"] } });
     for (const [id, data] of [["route-alt", routeRef.current.alt], ["route", routeRef.current.main]] as const) if (!m.getSource(id)) m.addSource(id, { type: "geojson", data });
@@ -597,7 +625,23 @@ export default function Navigator() {
                   <button className="gm-btn" onClick={() => { share(sel); tap(); }}><Icon name="share" size={20} />Share</button>
                 </div>
                 <div className="gm-photo">{sel.photo ? <img src={sel.photo} alt={sel.name} loading="lazy" /> : <><Icon name="photo" size={32} color="#9aa0a6" /><span>No photo yet</span></>}</div>
+                {sel.block != null && <div className="gm-info"><span className="gm-block-badge">Block {sel.block}</span><span>Walkway / Skyway complex · Main Campus</span></div>}
                 {sel.description && <div className="gm-info"><Icon name="info" size={22} color="#1a73e8" /><span>{sel.description}</span></div>}
+                {sel.block != null && (() => {
+                  const siblings = pois.filter((p) => p.block === sel.block && p.id !== sel.id);
+                  if (!siblings.length) return null;
+                  return (
+                    <div className="gm-block-siblings">
+                      <p className="gm-block-siblings-hd">Also in Block {sel.block}</p>
+                      {siblings.map((p) => (
+                        <button key={p.id} className="gm-block-sibling" onClick={() => choosePin(p)}>
+                          <Icon name={CAT[p.category]?.icon ?? "place"} size={18} color={CAT[p.category]?.color} />
+                          <span>{p.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
                 <button className="gm-info click" onClick={() => copyCoords(sel)}><Icon name="place" size={22} color="#1a73e8" /><span>{sel.lat.toFixed(6)}, {sel.lng.toFixed(6)}</span><Icon name="copy" size={18} color="#5f6368" /></button>
                 <div className="gm-info"><Icon name="verified" size={22} color={sel.verified === false ? "#9aa0a6" : "#188038"} /><span>{sel.verified === false ? "Not yet confirmed, position from OpenStreetMap" : "Confirmed on the ground"}</span></div>
                 {(sel.campus === "uith" || sel.campus === "cohs") && <button className="gm-info click" onClick={openTravel}><Icon name="taxi" size={22} color="#1a73e8" /><span>Coming from the Main Campus? How to get here</span></button>}
