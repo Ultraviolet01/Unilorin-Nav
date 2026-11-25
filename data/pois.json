@@ -526,6 +526,119 @@
     ]
   },
   {
+    "id": "central-research-labs",
+    "name": "Unilorin Central Research Laboratories",
+    "category": "faculty",
+    "lat": 8.480063,
+    "lng": 4.677938,
+    "description": "University of Ilorin Central Research Laboratories. Shared research facility serving multiple faculties.",
+    "photo": "",
+    "campus": "main",
+    "verified": false,
+    "source": "Plus Code 6FW6FMJH+25H, Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "central research lab",
+      "research laboratory",
+      "unilorin research lab",
+      "central lab"
+    ]
+  },
+  {
+    "id": "dept-chemistry-block2",
+    "name": "Department of Chemistry (Block 2)",
+    "category": "faculty",
+    "lat": 8.481188,
+    "lng": 4.673813,
+    "description": "Department of Chemistry laboratory and office block (Block 2), Faculty of Physical Sciences, main campus.",
+    "photo": "",
+    "campus": "main",
+    "verified": false,
+    "source": "Plus Code 6FW6FMJF+FGQ, Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "chemistry",
+      "chemistry lab",
+      "chemistry department",
+      "chemistry block",
+      "block 2 chemistry"
+    ]
+  },
+  {
+    "id": "dept-physics-biochemistry-block4",
+    "name": "Dept. of Physics & Biochemistry (Block 4)",
+    "category": "faculty",
+    "lat": 8.481938,
+    "lng": 4.674188,
+    "description": "Department of Physics and Biochemistry block (Block 4), Faculty of Physical Sciences, main campus.",
+    "photo": "",
+    "campus": "main",
+    "verified": false,
+    "source": "Plus Code 6FW6FMJF+QMM, Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "physics",
+      "physics lab",
+      "physics department",
+      "biochemistry",
+      "biochemistry lab",
+      "biochemistry department",
+      "block 4"
+    ]
+  },
+  {
+    "id": "microbiology-lab",
+    "name": "Microbiology Laboratory",
+    "category": "faculty",
+    "lat": 8.480563,
+    "lng": 4.676313,
+    "description": "Department of Microbiology laboratory, main campus.",
+    "photo": "",
+    "campus": "main",
+    "verified": false,
+    "source": "Plus Code 6FW6FMJG+6GX, Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "microbiology",
+      "microbiology lab",
+      "microbiology department"
+    ]
+  },
+  {
+    "id": "engineering-tech-labs",
+    "name": "Faculty of Engineering & Tech Labs",
+    "category": "faculty",
+    "lat": 8.483312,
+    "lng": 4.676188,
+    "description": "Faculty of Engineering and Technology laboratory complex, main campus. Houses practical and research labs for engineering departments.",
+    "photo": "",
+    "campus": "main",
+    "verified": false,
+    "source": "Plus Code 6FW6FMMG+8FF, Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "engineering lab",
+      "engineering labs",
+      "engineering laboratory",
+      "tech labs",
+      "faculty of engineering",
+      "engineering"
+    ]
+  },
+  {
+    "id": "agriculture-labs",
+    "name": "Faculty of Agriculture Labs",
+    "category": "faculty",
+    "lat": 8.486188,
+    "lng": 4.675938,
+    "description": "Faculty of Agriculture laboratory complex, main campus. Houses practical labs for agriculture and related departments.",
+    "photo": "",
+    "campus": "main",
+    "verified": false,
+    "source": "Plus Code 6FW6FMPG+F9G, Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "agriculture lab",
+      "agriculture labs",
+      "agriculture laboratory",
+      "faculty of agriculture lab"
+    ]
+  },
+  {
     "id": "old-college-class-area",
     "name": "Old College Lecture Rooms (LR Block)",
     "category": "lecture",
