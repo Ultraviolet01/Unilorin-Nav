@@ -19,7 +19,7 @@ type NavTab = "explore" | "browse" | "saved" | "settings";
 const CAMPUS: Record<Tab, { label: string; center: [number, number]; zoom: number; hint: string }> = {
   main: { label: "Main Campus", center: [4.6727, 8.4805], zoom: 15.3, hint: "Search Unilorin" },
   cohs: { label: "COHS & Colleges", center: [4.6495, 8.522], zoom: 15, hint: "Search COHS & Colleges" },
-  uith: { label: "UITH", center: [4.5326, 8.4797], zoom: 16, hint: "Search UITH" },
+  uith: { label: "UITH", center: [4.6456, 8.5390], zoom: 15.5, hint: "Search UITH" },
 };
 const campusTab = (campus: string): Tab => campus === "cohs" ? "cohs" : campus === "uith" ? "uith" : "main";
 const BASES: [Base, string, string][] = [["map", "Map", "Map view"], ["dark", "Dark", "Dark map"], ["sat", "Satellite", "Satellite view"], ...(HAS_AWS_MAP ? [["aws", "Amazon Map", "Amazon Map (AWS)"] as [Base, string, string]] : [])];
@@ -544,12 +544,12 @@ export default function Navigator() {
                 {recents.map((id) => pois.find((p) => p.id === id)).filter((p): p is Poi => !!p).map((p) => row("r" + p.id, <Icon name="history" size={20} />, p.name, `${CAT[p.category]?.noun ?? ""} · ${CAMPUS[campusTab(p.campus)].label}`, () => choosePin(p)))}
                 {!recents.length && tabPois.slice(0, 6).map((p) => pinRow(p))}
               </>) : (<>
-                {aliasElsewhere && row("alias", <Icon name="hospital" size={20} color="#D93025" />, <>“{q.trim()}” is at {aliasElsewhere.place}</>, `Not on this tab, tap to switch to ${CAMPUS[campusTab(aliasElsewhere.campus)].label}`, jumpToAlias)}
+                {aliasElsewhere && row("alias", <Icon name="hospital" size={20} color="#D93025" />, <>"{q.trim()}" is at {aliasElsewhere.place}</>, `Not on this tab, tap to switch to ${CAMPUS[campusTab(aliasElsewhere.campus)].label}`, jumpToAlias)}
                 {aliasHere && <div className="gm-row static"><span className="gm-ico"><Icon name="info" size={20} /></span><span><div className="gm-rt">This is at {aliasHere.place}</div><div className="gm-rs">Exact building not mapped yet</div></span></div>}
                 {travelHit && row("travel", <Icon name="taxi" size={20} color="#1A73E8" />, transport.shortTitle, "Cab and motor park advice", openTravel)}
                 {results.map((p) => pinRow(p))}
                 {results2.map((p) => pinRow(p, " (other tab)"))}
-                {!aliasElsewhere && !aliasHere && !travelHit && !results.length && !results2.length && <div className="gm-row static"><span className="gm-rs">No places found for “{q}”.</span></div>}
+                {!aliasElsewhere && !aliasHere && !travelHit && !results.length && !results2.length && <div className="gm-row static"><span className="gm-rs">No places found for "{q}".</span></div>}
               </>)}
             </div>)}
         </>) : (
@@ -828,7 +828,7 @@ export default function Navigator() {
       {nav && (
         <div className="gm-navbar">
           <button className="gm-navx" onClick={() => (navInfo.arrived ? finishNav() : exitNav())}>{navInfo.arrived ? "Done" : "Exit"}</button>
-          <div className="gm-navstats">{navInfo.arrived ? <b>You are at {nav.dest.name}</b> : navInfo.wait ? <b>Finding your location…</b> : <><b><Icon name={nav.mode === "cab" ? "car" : "walk"} size={20} color="#188038" /> {navInfo.minutes} min</b><span>{fmtDist(navInfo.remain)} · arrive {navInfo.arrive}</span>{recording && <small className="gm-rec-on">Saving this walk</small>}</>}</div>
+          <div className="gm-navstats">{navInfo.arrived ? <b>You are at {nav.dest.name}</b> : navInfo.wait ? <b>Finding your location…</b> : <><b><Icon name={nav.mode === "cab" ? "car" : "walk"} size={20} color="#188038" /> {navInfo.minutes} min</b><span>{fmtDist(navInfo.remain)} · arrive {navInfo.arrive}</span>{recording && <small className="gm-rec-on">Saving this walk</small>}</></div>
         </div>)}
       {nav && !following && !navInfo.arrived && <button className="gm-recenter" onClick={recenter}><Icon name="navigate" size={18} color="#1a73e8" /> Re-center</button>}
       <Presence open={!!toast} ms={240}>{(closing) => (
