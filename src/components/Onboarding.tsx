@@ -9,7 +9,8 @@ const STEPS: Step[] = ["splash", "w1", "w2", "w3", "location", "campus"];
 function SplashIllustration() {
   return (
     <div className="ob-splash-mark">
-      <svg width="56" height="56" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+      {/* navigation arrow icon — matches Figma S01 */}
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="#fff"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71L12 2z"/></svg>
     </div>
   );
 }
@@ -151,9 +152,9 @@ export default function Onboarding({ onDone }: { onDone: (tab: Tab) => void }) {
             <SplashIllustration />
             <h1 className="ob-app-name">Navigate<br />Unilorin</h1>
             <p className="ob-app-tag">Find any building on campus</p>
-          </div>
-          <div className="ob-splash-bar">
-            <div className="ob-splash-fill" />
+            <div className="ob-splash-bar">
+              <div className="ob-splash-fill" />
+            </div>
           </div>
         </div>
       )}
@@ -207,7 +208,7 @@ export default function Onboarding({ onDone }: { onDone: (tab: Tab) => void }) {
           </div>
           <div className="ob-loc-actions">
             <button className="ob-btn primary" onClick={requestLocation}>Allow location</button>
-            <button className="ob-btn outline" onClick={() => advance()}>Not now</button>
+            <button className="ob-btn ghost" onClick={() => advance()}>Not now</button>
             <p className="ob-fine-note">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
               The map works without it.
