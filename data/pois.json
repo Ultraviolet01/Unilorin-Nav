@@ -5,7 +5,7 @@
     "category": "admin",
     "lat": 8.480089,
     "lng": 4.673792,
-    "description": "Houses the Vice-Chancellor's office, Governing Council chamber, and the Registry and Bursary offices (per unilorin.edu.ng).",
+    "description": "Houses the Vice-Chancellor's Office, Deputy Vice-Chancellors, Registrar, Bursary, Council Chambers and central administration offices.",
     "photo": "",
     "campus": "main",
     "verified": false,
@@ -69,6 +69,26 @@
     "campus": "main",
     "verified": false,
     "source": "OpenStreetMap w1150932912 (last edited 2023-03-03)"
+  },
+  {
+    "id": "student-affairs-unit",
+    "name": "Student Affairs Unit",
+    "category": "admin",
+    "lat": 8.48159,
+    "lng": 4.67150,
+    "description": "Office of the Dean of Student Affairs. Handles hostel allocation, NYSC mobilization and student records. Opposite Lagos Hostel.",
+    "photo": "",
+    "campus": "main",
+    "verified": false,
+    "source": "Google AI answer (8.48159, 4.67150), Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "student affairs",
+      "dean of student affairs",
+      "dosa",
+      "nysc",
+      "hostel allocation",
+      "student records"
+    ]
   },
   {
     "id": "campus-market",
@@ -386,6 +406,25 @@
     "campus": "main",
     "verified": false,
     "source": "OpenStreetMap n6830966285 (last edited 2019-09-27)"
+  },
+  {
+    "id": "item7-go-restaurant",
+    "name": "Item7 Go Restaurant",
+    "category": "eatery",
+    "lat": 8.48330,
+    "lng": 4.66798,
+    "description": "Popular campus restaurant on the University Way / School Park axis. Serves party jollof rice, fried rice, chicken, croaker fish and shawarma.",
+    "photo": "",
+    "campus": "main",
+    "verified": false,
+    "source": "Google AI answer (8.48330, 4.66798, Plus Code FMM9+859), Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "item7",
+      "item 7",
+      "item7 go",
+      "jollof rice",
+      "school park restaurant"
+    ]
   },
   {
     "id": "university-central-mosque",
