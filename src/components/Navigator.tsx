@@ -553,7 +553,12 @@ export default function Navigator() {
               {BASES.map(([b, l]) => <button key={b} className={base === b ? "on" : ""} onClick={() => { setBase(b); setLayerMenu(false); tap(); }}><span className={`gm-swatch ${b}`} />{l}</button>)}
             </div>)}</Presence>
         </div>)}
-      {!(view === "place" && full) && !dir && navTab === "explore" && <button className={`gm-fab ${locOn ? "on" : ""} ${locOn && !locFix ? "seek" : ""} ${sheetUp ? "up" : ""}`} aria-label="Show my location" aria-pressed={locOn} onClick={toggleLocate}><Icon name="locate" /></button>}
+      {!(view === "place" && full) && !dir && navTab === "explore" && (
+        <button className={`gm-whereami ${locOn ? "on" : ""} ${locOn && !locFix ? "seek" : ""} ${sheetUp ? "up" : ""}`} aria-label="Show my location" aria-pressed={locOn} onClick={toggleLocate}>
+          <Icon name="locate" size={20} />
+          Where am I?
+        </button>
+      )}
 
       {/* ---- bottom sheet / side panel (one element; content swaps, it slides in/out and follows the finger) ---- */}
       {sheetMounted && S && (
