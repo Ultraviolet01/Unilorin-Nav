@@ -251,6 +251,59 @@
     "source": "OpenStreetMap w1079750387 (last edited 2022-07-19)"
   },
   {
+    "id": "aglt",
+    "name": "AGLT",
+    "category": "lecture",
+    "lat": 8.485938,
+    "lng": 4.676813,
+    "description": "Agriculture Lecture Theatre (AGLT), owned by the Faculty of Agriculture.",
+    "photo": "",
+    "campus": "main",
+    "verified": false,
+    "source": "Google AI answer (Plus Code FMPG+9P4), Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "aglt",
+      "agriculture lecture theatre",
+      "faculty of agriculture lecture theatre"
+    ]
+  },
+  {
+    "id": "nslt-1",
+    "name": "NSLT 1",
+    "category": "lecture",
+    "lat": 8.480396,
+    "lng": 4.675856,
+    "description": "New Science Lecture Theatre 1 (NSLT 1), owned by the Faculty of Physical/Life Sciences. Used for general science and mathematics classes.",
+    "photo": "",
+    "campus": "main",
+    "verified": false,
+    "source": "Google AI answer (Plus Code FMJG+585), Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "nslt 1",
+      "nslt1",
+      "new science lecture theatre 1",
+      "new science lecture theatre"
+    ]
+  },
+  {
+    "id": "nslt-2",
+    "name": "NSLT 2",
+    "category": "lecture",
+    "lat": 8.482688,
+    "lng": 4.678813,
+    "description": "New Science Lecture Theatre 2 (NSLT 2), on the Science/Engineering axis. Used for general science and mathematics classes.",
+    "photo": "",
+    "campus": "main",
+    "verified": false,
+    "source": "Google AI answer (Plus Code FMMH+3GP), Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "nslt 2",
+      "nslt2",
+      "new science lecture theatre 2",
+      "new science lecture theatre"
+    ]
+  },
+  {
     "id": "political-science-sociology-block",
     "name": "Political Science / Sociology block",
     "category": "faculty",
