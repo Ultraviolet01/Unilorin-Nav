@@ -628,6 +628,26 @@
     ]
   },
   {
+    "id": "nursing-demo-lab",
+    "name": "Nursing Demonstration Laboratory",
+    "category": "faculty",
+    "lat": 8.5126,
+    "lng": 4.6511,
+    "description": "Nursing Demonstration Lab Wing at New College (College of Health Sciences). Used for nursing skills and clinical simulation practicals. Located in the same New College compound as the departmental blocks. Not on the Main Campus: take a cab.",
+    "photo": "",
+    "campus": "cohs",
+    "verified": false,
+    "source": "Plus Code GM72+2C4 (New College compound), Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "nursing lab",
+      "nursing demonstration lab",
+      "nursing skills lab",
+      "demo lab",
+      "nursing simulation",
+      "nursing"
+    ]
+  },
+  {
     "id": "cohs-lab-complex",
     "name": "Pre-Clinical Laboratory Complex (COHS)",
     "category": "faculty",
