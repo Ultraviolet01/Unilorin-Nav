@@ -8,6 +8,7 @@ import { CAN_UPLOAD, flushWalks, forgetWalks, getSharing, setSharing, type Shari
 import { minutesLeft, prepare, remainingLine, smoothHeading, snapToRoute, type Prepared } from "@/lib/nav";
 import { HAS_AWS_MAP, getMapStyle, type Base } from "@/lib/mapStyle";
 import { CAT, CHIP_ORDER, Icon, iconPath } from "./gm/icons";
+import Onboarding from "./Onboarding";
 import buildings from "../../data/buildings.json";
 import paths from "../../data/paths.json";
 import transport from "../../data/transport.json";
@@ -108,6 +109,8 @@ export default function Navigator() {
   const recPts = useRef<[number, number][]>([]), recId = useRef(""), recLabel = useRef(""), recKind = useRef("footpath"), recDest = useRef("");
   const [travel, setTravel] = useState(false), [drawer, setDrawer] = useState(false), [layerMenu, setLayerMenu] = useState(false), [navTab, setNavTab] = useState<NavTab>("explore");
   const [locOn, setLocOn] = useState(false), [locFix, setLocFix] = useState(false), [toast, setToast] = useState<string | null>(null), [zoomed, setZoomed] = useState(false), [dragY, setDragY] = useState<number | null>(null);
+  const [onboarded, setOnboarded] = useState(true); // true = already done, skip overlay
+  useEffect(() => { try { setOnboarded(!!localStorage.getItem("unilorin-onboarded")); } catch { setOnboarded(true); } }, []);
 
   const tabPois = useMemo(() => pois.filter((p) => p.campus === tab), [pois, tab]);
   const otherPois = useMemo(() => pois.filter((p) => !tabPois.includes(p)), [pois, tabPois]);
@@ -757,6 +760,12 @@ export default function Navigator() {
       {nav && !following && !navInfo.arrived && <button className="gm-recenter" onClick={recenter}><Icon name="navigate" size={18} color="#1a73e8" /> Re-center</button>}
       <Presence open={!!toast} ms={240}>{(closing) => (
         <div className={`gm-toast ${sheetUp ? "up" : ""} ${closing ? "out" : ""}`} role="status"><span>{lastToast.current}</span><button onClick={() => setToast(null)}>Dismiss</button></div>)}</Presence>
+      {!onboarded && (
+        <Onboarding onDone={(t) => {
+          switchTab(t);
+          try { localStorage.setItem("unilorin-onboarded", "1"); } catch { /* ignore */ }
+          setOnboarded(true);
+        }} />)}
     </div>
   );
 }
