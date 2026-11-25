@@ -611,7 +611,7 @@
     "category": "faculty",
     "lat": 8.5114,
     "lng": 4.65105,
-    "description": "College of Health Sciences Academic Block 2, New College campus. Houses the Departments of Anatomy, Physiology, Pharmacology & Therapeutics, and Medical Microbiology & Parasitology. The Faculty of Basic Medical Sciences (FBMS) Complex (Medical Biochemistry, Nursing Science) is adjacent. Not on the Main Campus: take a cab.",
+    "description": "College of Health Sciences Academic Block 2, New College campus. Contains the departmental offices, tutorial rooms, and classrooms for Anatomy, Physiology, Pharmacology & Therapeutics, Medical Microbiology & Parasitology, and Nursing Science. Note: the actual wet labs (anatomy dissection hall, physiology labs, histology labs, biochemistry labs) are in the separate Pre-Clinical Laboratory Complex about 2.5 km south. Not on the Main Campus: take a cab.",
     "photo": "",
     "campus": "cohs",
     "verified": false,
@@ -619,14 +619,43 @@
     "aliases": [
       "academic block 2",
       "cohs block 2",
-      "anatomy",
-      "physiology",
       "pharmacology",
       "medical microbiology",
       "parasitology",
-      "fbms",
-      "medical biochemistry",
-      "nursing science"
+      "nursing science",
+      "anatomy department",
+      "physiology department"
+    ]
+  },
+  {
+    "id": "cohs-lab-complex",
+    "name": "Pre-Clinical Laboratory Complex (COHS)",
+    "category": "faculty",
+    "lat": 8.487687,
+    "lng": 4.641437,
+    "description": "The main laboratory building for the College of Health Sciences. Houses the Gross Anatomy (dissection hall), Histology, Physiology, and Medical Biochemistry laboratories all under one roof. This is where MBBS and BDS students come for all pre-clinical lab practicals. Not at the New College campus: about 2.5 km south. Not on the Main Campus: take a cab.",
+    "photo": "",
+    "campus": "cohs",
+    "verified": false,
+    "source": "Google Maps listing 'Faculty of Basic Medical Sciences Laboratory Complex' (Plus Code FJQR+3H4, coordinates 8.4877, 4.6414); confirmed by Google AI search (8.487687, 4.641437), Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "lab complex",
+      "fbms lab",
+      "pre-clinical lab",
+      "anatomy lab",
+      "physiology lab",
+      "histology lab",
+      "biochemistry lab",
+      "medical biochemistry lab",
+      "gross anatomy",
+      "dissection hall",
+      "pre clinical",
+      "fbms laboratory",
+      "basic medical sciences lab",
+      "anatomy",
+      "physiology",
+      "histology",
+      "fbms"
     ]
   },
   {
