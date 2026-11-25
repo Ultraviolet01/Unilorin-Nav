@@ -240,7 +240,8 @@ button.gm-row:active{transform:scale(.985)}
 }
 
 /* campus tab strip */
-.gm-camtabs{position:absolute;z-index:7;top:64px;left:50%;transform:translateX(-50%);display:flex;background:var(--surface);border-radius:20px;box-shadow:var(--sh);padding:3px;gap:2px;white-space:nowrap;animation:introDown .4s var(--ease-out) backwards .08s;max-width:calc(100vw - 24px);overflow-x:auto;scrollbar-width:none}
+.gm-camtabs{position:absolute;z-index:7;top:64px;left:50%;transform:translateX(-50%);display:flex;background:var(--surface);border-radius:20px;box-shadow:var(--sh);padding:3px;gap:2px;white-space:nowrap;animation:camTabsIn .4s var(--ease-out) backwards .08s;max-width:calc(100vw - 24px);overflow-x:auto;scrollbar-width:none}
+@keyframes camTabsIn{from{transform:translateX(-50%) translateY(-14px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
 .gm-camtabs::-webkit-scrollbar{display:none}
 .gm-camtab{border:0;background:none;border-radius:17px;padding:7px 16px;font-size:13px;font-weight:500;color:var(--sub);font-family:inherit;cursor:pointer;transition:background .2s,color .2s,transform .15s var(--spring)}
 .gm-camtab:active{transform:scale(.93)}.gm-camtab.on{background:var(--blue-bg);color:var(--chipon)}
