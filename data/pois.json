@@ -1705,6 +1705,34 @@
     "source": "CSV / Google Maps coordinate data Nov 2026"
   },
   {
+    "id": "takleema-hostel",
+    "name": "Takleema Hostel",
+    "category": "hostel",
+    "lat": 8.479464,
+    "lng": 4.66392,
+    "description": "Hostel on the Main Campus corridor.",
+    "photo": "",
+    "campus": "main",
+    "verified": false,
+    "source": "Google Maps listing (Plus Code FMH7+QHM) supplied by the project team, Nov 2026; not yet checked on the ground"
+  },
+  {
+    "id": "zapel-hostel",
+    "name": "Zapel Hostel",
+    "category": "hostel",
+    "lat": 8.485278,
+    "lng": 4.667778,
+    "description": "Male hostel on the Main Campus corridor, also called the International Male Hostel.",
+    "photo": "",
+    "campus": "main",
+    "verified": false,
+    "source": "Google Maps listing (Plus Code FMP9+35G) supplied by the project team, Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "zapel",
+      "international male hostel"
+    ]
+  },
+  {
     "id": "general-studies-division-gse-gns",
     "name": "General Studies Division (GSE / GNS)",
     "category": "admin",
