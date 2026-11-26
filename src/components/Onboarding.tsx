@@ -69,7 +69,7 @@ const FACULTY = [
 ];
 
 const CAMPUSES = [
-  { id: "main" as Tab, name: "Main Campus", location: "Tanke · University Road", count: "103 places", color: "#1A73E8" },
+  { id: "main" as Tab, name: "Main Campus", location: "Tanke · University Road", count: "101 places", color: "#1A73E8" },
   { id: "cohs" as Tab, name: "COHS — College of Health Sciences", location: "New College · Old College", count: "19 places", color: "#188038" },
   { id: "uith" as Tab, name: "UITH — Teaching Hospital", location: "University of Ilorin Teaching Hospital", count: "14 places", color: "#D93025" },
 ];
