@@ -581,6 +581,22 @@
     ]
   },
   {
+    "id": "industrial-chemistry-laboratory",
+    "name": "Industrial Chemistry Laboratory",
+    "category": "faculty",
+    "lat": 8.48284,
+    "lng": 4.67433,
+    "description": "Industrial Chemistry wet lab and practical facility, main campus, north of the main science blocks. The departmental offices are in Block 6.",
+    "photo": "",
+    "campus": "main",
+    "verified": false,
+    "source": "Google Maps place record (Plus Code FMMF+4PP) supplied by the project team, Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "industrial chemistry lab",
+      "industrial chemistry laboratory"
+    ]
+  },
+  {
     "id": "microbiology-lab",
     "name": "Microbiology Laboratory",
     "category": "faculty",
