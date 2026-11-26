@@ -5,8 +5,10 @@ import { loadState, metersBetween, saveState, type FieldTrack } from "./fieldsto
 
 export type Sharing = "upload" | "local" | null;
 
-// Walk recording and sharing are switched off; set to true to bring the feature back.
-export const WALK_TRACKING = false;
+// Walk recording and sharing. Set to false to switch the whole feature off.
+export const WALK_TRACKING = true;
+// The team's Field collector page links; kept hidden from the public menus.
+export const FIELD_COLLECTOR_LINKS = false;
 const CONSENT = "unilorin-walk-sharing-v1", OWNER = "unilorin-walk-owner-v1";
 const API = process.env.NEXT_PUBLIC_API_URL;
 // Sharing is OFF unless the build says NEXT_PUBLIC_WALK_SHARING=on (set in Amplify only after the privacy review in docs/PRIVACY.md).
