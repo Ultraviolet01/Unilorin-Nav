@@ -8,7 +8,7 @@ export type Sharing = "upload" | "local" | null;
 // Walk recording and sharing. Set to false to switch the whole feature off.
 export const WALK_TRACKING = true;
 // The team's Field collector page links; kept hidden from the public menus.
-export const FIELD_COLLECTOR_LINKS = false;
+export const FIELD_COLLECTOR_LINKS = true;
 const CONSENT = "unilorin-walk-sharing-v1", OWNER = "unilorin-walk-owner-v1";
 const API = process.env.NEXT_PUBLIC_API_URL;
 // Sharing is OFF unless the build says NEXT_PUBLIC_WALK_SHARING=on (set in Amplify only after the privacy review in docs/PRIVACY.md).
