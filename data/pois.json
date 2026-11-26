@@ -1405,6 +1405,18 @@
     "source": "CSV / Google Maps coordinate data Nov 2026"
   },
   {
+    "id": "veterinary-clinical-students-hostel",
+    "name": "Veterinary Clinical Students' Hostel",
+    "category": "hostel",
+    "lat": 8.490266,
+    "lng": 4.57075,
+    "description": "Hostel for clinical veterinary students posted to the VTH at Sabo Oke. 18 Lafiagi Road, Oko Erin. Not on the Main Campus: take a cab.",
+    "photo": "",
+    "campus": "uith",
+    "verified": true,
+    "source": "Verified off-campus pin at 18 Lafiagi Road, Oko Erin (supplied by the project team, Nov 2026)"
+  },
+  {
     "id": "veterinary-teaching-hospital-vth-sabo-oke",
     "name": "Veterinary Teaching Hospital (VTH) — Sabo Oke",
     "category": "health",
