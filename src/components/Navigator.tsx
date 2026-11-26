@@ -115,6 +115,8 @@ export default function Navigator() {
   const [travel, setTravel] = useState(false), [drawer, setDrawer] = useState(false), [layerMenu, setLayerMenu] = useState(false), [navTab, setNavTab] = useState<NavTab>("explore");
   const [locOn, setLocOn] = useState(false), [locFix, setLocFix] = useState(false), [toast, setToast] = useState<string | null>(null), [zoomed, setZoomed] = useState(false), [dragY, setDragY] = useState<number | null>(null);
   const [onboarded, setOnboarded] = useState(true); // true = already done, skip overlay
+  const [noteOpen, setNoteOpen] = useState(true);
+  useEffect(() => { setNoteOpen(true); }, [tab]);
   useEffect(() => { try { setOnboarded(!!localStorage.getItem("unilorin-onboarded")); } catch { setOnboarded(true); } }, []);
 
   const { nav, navInfo, following, recording, startNav, exitNav, finishNav, recenter, teardown, onUserDrag } = useLiveNav({ map, dir, setDir, setToast, setRouteData, show, setSelected, closeDirections, stopLocate, walkSavedMsg, saveWalk });
@@ -554,8 +556,8 @@ export default function Navigator() {
           </div>
         </section>)}
 
-      {tab === "uith" && !view && navTab === "explore" && <div className="gm-note"><b>University of Ilorin Teaching Hospital</b><br />Only the hospital grounds are mapped so far, wards, departments and emergency routes will be added after a site visit.<button onClick={openTravel}>Coming from the Main Campus? How to get here</button></div>}
-      {tab === "cohs" && !view && navTab === "explore" && <div className="gm-note"><b>College of Health Sciences</b><br />Old College class area and New College lecture halls are pinned. More buildings will be added after a site visit.<button onClick={openTravel}>Coming from the Main Campus? How to get here</button></div>}
+      {tab === "uith" && noteOpen && !view && navTab === "explore" && <div className="gm-note"><button className="gm-x" aria-label="Close" onClick={() => setNoteOpen(false)}><Icon name="close" /></button><b>University of Ilorin Teaching Hospital</b><br />Only the hospital grounds are mapped so far, wards, departments and emergency routes will be added after a site visit.<button onClick={openTravel}>Coming from the Main Campus? How to get here</button></div>}
+      {tab === "cohs" && noteOpen && !view && navTab === "explore" && <div className="gm-note"><button className="gm-x" aria-label="Close" onClick={() => setNoteOpen(false)}><Icon name="close" /></button><b>College of Health Sciences</b><br />Old College class area and New College lecture halls are pinned. More buildings will be added after a site visit.<button onClick={openTravel}>Coming from the Main Campus? How to get here</button></div>}
 
       <Drawer open={drawer} tab={tab} base={base} bases={BASES} onClose={() => setDrawer(false)} onSwitchTab={switchTab} onSetBase={setBase} onTravel={openTravel} />
 

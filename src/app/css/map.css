@@ -84,6 +84,8 @@ button.gm-row:hover{background:var(--hover)}.gm-row.static{cursor:default}
 /* misc */
 .gm-note{position:absolute;z-index:6;left:12px;right:12px;bottom:calc(var(--bn,60px) + env(safe-area-inset-bottom) + 8px);max-width:380px;background:var(--surface);border-radius:12px;padding:12px 14px;font-size:14px;line-height:20px;box-shadow:var(--sh-lg)}
 .gm-note button{display:block;margin-top:6px;border:0;background:none;padding:0;color:var(--link);font-weight:500;font-size:14px}
+.gm-note{padding-right:50px}
+.gm-note .gm-x{top:6px;right:6px;width:36px;height:36px;margin:0;padding:0;background:rgba(60,64,67,.1);color:var(--sub);font-size:0}
 .gm-scrim{position:absolute;inset:0;z-index:9;background:rgba(32,33,36,.5)}
 .gm-drawer{position:absolute;z-index:10;top:0;bottom:0;left:0;width:min(320px,86vw);background:var(--surface);box-shadow:var(--sh-lg);overflow:auto;padding-bottom:16px;animation:gm-in .2s ease}
 @keyframes gm-in{from{transform:translateX(-100%)}to{transform:none}}
