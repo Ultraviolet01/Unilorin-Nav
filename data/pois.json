@@ -565,6 +565,22 @@
     ]
   },
   {
+    "id": "physics-laboratory",
+    "name": "Physics Laboratory",
+    "category": "faculty",
+    "lat": 8.48204,
+    "lng": 4.67397,
+    "description": "Physics laboratory, main campus, beside the Physics & Biochemistry block (Block 4).",
+    "photo": "",
+    "campus": "main",
+    "verified": false,
+    "source": "Google Maps place record supplied by the project team, Nov 2026; not yet checked on the ground",
+    "aliases": [
+      "physics lab",
+      "physics laboratory"
+    ]
+  },
+  {
     "id": "microbiology-lab",
     "name": "Microbiology Laboratory",
     "category": "faculty",
