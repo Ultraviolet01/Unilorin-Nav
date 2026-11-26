@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { type Category, type LL, type Mode, type Poi, type RouteOption, CAB_M_PER_MIN, WALK_M_PER_MIN, getRoutes, loadPois, routeMeters, searchPois } from "@/lib/pois";
@@ -11,19 +11,19 @@ import { CAT, CHIP_ORDER, Icon, iconPath } from "./gm/icons";
 import PlaceDetail from "./gm/PlaceDetail";
 import WalkConsent from "./gm/WalkConsent";
 import Onboarding from "./Onboarding";
+import { Presence, useMounted } from "./gm/Presence";
+import { CAMPUS, campusTab, type NavTab, type Tab } from "./gm/campus";
+import { tap } from "./gm/haptics";
+import Drawer from "./gm/Drawer";
+import BottomNav from "./gm/BottomNav";
+import BrowseScreen from "./gm/BrowseScreen";
+import SavedScreen from "./gm/SavedScreen";
+import SettingsScreen from "./gm/SettingsScreen";
 import buildings from "../../data/buildings.json";
 import paths from "../../data/paths.json";
 import transport from "../../data/transport.json";
 import elsewhere from "../../data/elsewhere.json";
 
-type Tab = "main" | "cohs" | "uith";
-type NavTab = "explore" | "browse" | "saved" | "settings";
-const CAMPUS: Record<Tab, { label: string; center: [number, number]; zoom: number; hint: string }> = {
-  main: { label: "Main Campus", center: [4.6727, 8.4805], zoom: 15.3, hint: "Search Unilorin" },
-  cohs: { label: "COHS & Colleges", center: [4.6505, 8.513], zoom: 15, hint: "Search COHS & Colleges" },
-  uith: { label: "UITH", center: [4.6456, 8.5390], zoom: 15.5, hint: "Search UITH" },
-};
-const campusTab = (campus: string): Tab => campus === "cohs" ? "cohs" : campus === "uith" ? "uith" : "main";
 const BASES: [Base, string, string][] = [["map", "Map", "Map view"], ["dark", "Dark", "Dark map"], ["sat", "Satellite", "Satellite view"], ...(HAS_AWS_MAP ? [["aws", "Amazon Map", "Amazon Map (AWS)"] as [Base, string, string]] : [])];
 const readBase = (): Base => { try { const b = localStorage.getItem("unilorin-base") as Base | null; if (b && BASES.some((x) => x[0] === b)) return b; } catch { /* ignore */ } return "sat"; };
 const EMPTY: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
@@ -58,21 +58,9 @@ const hashFor = (t: Tab) => (t === "uith" ? "#uith" : t === "cohs" ? "#cohs" : "
 
 // ---- motion helpers ----
 const reduced = () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-const tap = (ms = 8) => { try { navigator.vibrate?.(ms); } catch { /* not supported (e.g. iOS) */ } }; // tiny haptic tick on touch devices
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const KX = 111320 * Math.cos((8.48 * Math.PI) / 180), KY = 110574;
 const segLen = (a: [number, number], b: [number, number]) => Math.hypot((b[0] - a[0]) * KX, (b[1] - a[1]) * KY);
-/** true while `open`, and for `ms` after it closes, so things can animate OUT before unmounting */
-function useMounted(open: boolean, ms: number) {
-  const [m, setM] = useState(open);
-  useEffect(() => { if (open) { setM(true); return; } const t = setTimeout(() => setM(false), ms); return () => clearTimeout(t); }, [open, ms]);
-  return m || open;
-}
-function Presence({ open, ms = 200, children }: { open: boolean; ms?: number; children: (closing: boolean) => ReactNode }) {
-  const mounted = useMounted(open, ms);
-  return mounted ? <>{children(!open)}</> : null;
-}
-
 interface Start extends LL { name: string }
 interface Dir { dest: Poi; start: Start | null; routes: RouteOption[]; active: number; sq: string; sfocus: boolean; locating: boolean }
 
@@ -669,111 +657,15 @@ export default function Navigator() {
       {tab === "uith" && !view && navTab === "explore" && <div className="gm-note"><b>University of Ilorin Teaching Hospital</b><br />Only the hospital grounds are mapped so far, wards, departments and emergency routes will be added after a site visit.<button onClick={openTravel}>Coming from the Main Campus? How to get here</button></div>}
       {tab === "cohs" && !view && navTab === "explore" && <div className="gm-note"><b>College of Health Sciences</b><br />Old College class area and New College lecture halls are pinned. More buildings will be added after a site visit.<button onClick={openTravel}>Coming from the Main Campus? How to get here</button></div>}
 
-      {/* ---- drawer ---- */}
-      <Presence open={drawer} ms={260}>{(closing) => (<>
-        <div className={`gm-scrim ${closing ? "out" : ""}`} onClick={() => setDrawer(false)} />
-        <aside className={`gm-drawer ${closing ? "out" : ""}`} aria-label="Menu">
-          <div className="gm-brand"><span className="gm-logo"><Icon name="place" size={22} color="#fff" /></span><div><b>Unilorin Navigator</b><br /><small>Find your way around campus</small></div></div>
-          {(Object.keys(CAMPUS) as Tab[]).map((t) => <button key={t} className={`gm-item ${t === tab ? "on" : ""}`} onClick={() => { setDrawer(false); switchTab(t); }}><Icon name={t === "uith" ? "hospital" : "school"} size={22} />{CAMPUS[t].label}</button>)}
-          <hr />
-          {BASES.map(([b, , l]) => <button key={b} className={`gm-item ${base === b ? "on" : ""}`} onClick={() => { setBase(b); setDrawer(false); }}><Icon name="layers" size={22} />{l}</button>)}
-          <button className="gm-item" onClick={openTravel}><Icon name="taxi" size={22} />Getting to COHS &amp; UITH</button>
-          <a className="gm-item" href="/field/"><Icon name="photo" size={22} />Field collector (team)</a>
-          <p className="gm-fine">Map data © OpenStreetMap contributors. Icons: Material Icons (Apache-2.0).</p>
-        </aside></>)}</Presence>
+      <Drawer open={drawer} tab={tab} base={base} bases={BASES} onClose={() => setDrawer(false)} onSwitchTab={switchTab} onSetBase={setBase} onTravel={openTravel} />
 
-      {/* ---- Browse screen ---- */}
-      {navTab === "browse" && (
-        <div className="gm-screen">
-          <div className="gm-screen-head"><h2>Browse</h2><p>{CAMPUS[tab].label}</p></div>
-          {tabPois.length === 0
-            ? <div style={{ padding: "48px 24px", textAlign: "center", color: "var(--sub)", fontSize: 15, lineHeight: 1.5 }}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" style={{ opacity: .3, display: "block", margin: "0 auto 16px" }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-                No places mapped for {CAMPUS[tab].label} yet.
-              </div>
-            : <div className="gm-browse-grid">
-                {CHIP_ORDER.filter((c) => tabPois.some((p) => p.category === c)).map((c, i) => {
-                  const count = tabPois.filter((p) => p.category === c).length;
-                  return (
-                    <button key={c} className="gm-browse-card" style={{ animationDelay: `${i * 40}ms` } as React.CSSProperties}
-                      onClick={() => { setNavTab("explore"); toggleCat(c); tap(); }}>
-                      <div className="gm-browse-icon" style={{ background: CAT[c].color + "22" }}>
-                        <Icon name={CAT[c].icon} size={24} color={CAT[c].color} />
-                      </div>
-                      <span className="gm-browse-name">{CAT[c].label}</span>
-                      <span className="gm-browse-count">{count} place{count !== 1 ? "s" : ""}</span>
-                    </button>);
-                })}
-              </div>}
-        </div>)}
+      {navTab === "browse" && <BrowseScreen pois={tabPois} campusLabel={CAMPUS[tab].label} onPickCategory={(c) => { setNavTab("explore"); toggleCat(c); }} />}
 
-      {/* ---- Saved screen ---- */}
-      {navTab === "saved" && (
-        <div className="gm-screen">
-          <div className="gm-screen-head"><h2>Saved</h2><p>Your recent places</p></div>
-          {recents.length === 0
-            ? <div style={{ padding: "32px 16px", textAlign: "center", color: "var(--sub)", fontSize: 14 }}>No saved places yet. Tap a pin on the map to explore places.</div>
-            : recents.map((id) => pois.find((p) => p.id === id)).filter((p): p is Poi => !!p).map((p) => (
-                <button key={p.id} className="gm-row" onClick={() => { setNavTab("explore"); choosePin(p); tap(); }}>
-                  <span className="gm-ico"><Icon name={CAT[p.category]?.icon ?? "place"} size={20} color={CAT[p.category]?.color} /></span>
-                  <span><div className="gm-rt">{p.name}</div><div className="gm-rs">{CAT[p.category]?.noun ?? ""} · {CAMPUS[campusTab(p.campus)].label}</div></span>
-                </button>))}
-        </div>)}
+      {navTab === "saved" && <SavedScreen recents={recents} pois={pois} onChoose={(p) => { setNavTab("explore"); choosePin(p); }} />}
 
-      {/* ---- Settings screen ---- */}
-      {navTab === "settings" && (
-        <div className="gm-screen">
-          <div className="gm-screen-head"><h2>Settings</h2><p>Map style and options</p></div>
-          <div className="gm-screen-head" style={{ paddingTop: 4 }}><p style={{ fontWeight: 500, color: "var(--text)" }}>Map style</p></div>
-          <div className="gm-settings-layers">
-            {BASES.map(([b, l]) => (
-              <button key={b} className={`gm-settings-layer ${base === b ? "on" : ""}`} onClick={() => { setBase(b); tap(); }}>
-                <span className={`gm-swatch ${b}`} style={{ width: 52, height: 52, borderRadius: 8, display: "block" }} />
-                {l}
-              </button>))}
-          </div>
-          <hr className="gm-settings-hr" />
-          <div className="gm-screen-head" style={{ paddingTop: 4 }}><p style={{ fontWeight: 500, color: "var(--text)" }}>Campus</p></div>
-          {(Object.keys(CAMPUS) as Tab[]).map((t) => (
-            <button key={t} className="gm-row" onClick={() => { setNavTab("explore"); switchTab(t); tap(); }}>
-              <span className="gm-ico"><Icon name={t === "uith" ? "hospital" : "school"} size={20} /></span>
-              <span><div className="gm-rt">{CAMPUS[t].label}</div><div className="gm-rs">{tab === t ? "Currently shown" : "Tap to switch"}</div></span>
-            </button>))}
-          <hr className="gm-settings-hr" />
-          <button className="gm-row" onClick={() => { setNavTab("explore"); openTravel(); tap(); }}>
-            <span className="gm-ico"><Icon name="taxi" size={20} color="#1a73e8" /></span>
-            <span><div className="gm-rt">Getting to COHS &amp; UITH</div><div className="gm-rs">Cab and motor park advice</div></span>
-          </button>
-          <a className="gm-row" href="/field/" style={{ display: "flex", alignItems: "center", gap: 0, textDecoration: "none", color: "inherit" }}>
-            <span className="gm-ico"><Icon name="photo" size={20} /></span>
-            <span><div className="gm-rt">Field collector</div><div className="gm-rs">Map team only</div></span>
-          </a>
-          <p className="gm-fine" style={{ padding: "16px 16px 32px" }}>Map data &copy; OpenStreetMap contributors. Icons: Material Icons (Apache-2.0).</p>
-        </div>)}
+      {navTab === "settings" && <SettingsScreen base={base} bases={BASES} tab={tab} onSetBase={setBase} onSwitchCampus={(t) => { setNavTab("explore"); switchTab(t); }} onTravel={() => { setNavTab("explore"); openTravel(); }} />}
 
-      {/* ---- bottom navigation bar ---- */}
-      <nav className="gm-bottomnav" aria-label="Main navigation">
-        <button className={`gm-navitem ${navTab === "explore" ? "on" : ""}`} onClick={() => { setNavTab("explore"); tap(); }} aria-label="Explore">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-          Explore
-        </button>
-        <button className={`gm-navitem ${navTab === "browse" ? "on" : ""}`} onClick={() => { setNavTab("browse"); tap(); }} aria-label="Browse">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
-          Browse
-        </button>
-        <button className={`gm-navitem ${navTab === "explore" && tab === "cohs" ? "on" : ""}`} onClick={() => { setNavTab("explore"); switchTab("cohs"); tap(); }} aria-label="COHS">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-1.99.9-1.99 2L3 19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 11h-4v4h-4v-4H6v-4h4V6h4v4h4v4z"/></svg>
-          COHS
-        </button>
-        <button className={`gm-navitem ${navTab === "saved" ? "on" : ""}`} onClick={() => { setNavTab("saved"); tap(); }} aria-label="Saved">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
-          Saved
-        </button>
-        <button className={`gm-navitem ${navTab === "settings" ? "on" : ""}`} onClick={() => { setNavTab("settings"); tap(); }} aria-label="Settings">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-          Settings
-        </button>
-      </nav>
+      <BottomNav navTab={navTab} tab={tab} onSelect={setNavTab} onCohs={() => { setNavTab("explore"); switchTab("cohs"); }} />
 
       {consentOpen && (
         <WalkConsent
