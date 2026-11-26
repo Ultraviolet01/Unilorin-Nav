@@ -3,6 +3,7 @@ import { type Base } from "@/lib/mapStyle";
 import { Icon } from "./icons";
 import { CAMPUS, type Tab } from "./campus";
 import { tap } from "./haptics";
+import { WALK_TRACKING } from "@/lib/walkshare";
 
 interface Props {
   base: Base;
@@ -37,10 +38,10 @@ export default function SettingsScreen({ base, bases, tab, onSetBase, onSwitchCa
         <span className="gm-ico"><Icon name="taxi" size={20} color="#1a73e8" /></span>
         <span><div className="gm-rt">Getting to COHS &amp; UITH</div><div className="gm-rs">Cab and motor park advice</div></span>
       </button>
-      <a className="gm-row" href="/field/" style={{ display: "flex", alignItems: "center", gap: 0, textDecoration: "none", color: "inherit" }}>
+      {WALK_TRACKING && <a className="gm-row" href="/field/" style={{ display: "flex", alignItems: "center", gap: 0, textDecoration: "none", color: "inherit" }}>
         <span className="gm-ico"><Icon name="photo" size={20} /></span>
         <span><div className="gm-rt">Field collector</div><div className="gm-rs">Map team only</div></span>
-      </a>
+      </a>}
       <p className="gm-fine" style={{ padding: "16px 16px 32px" }}>Map data &copy; OpenStreetMap contributors. Icons: Material Icons (Apache-2.0).</p>
     </div>
   );

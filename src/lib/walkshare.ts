@@ -4,6 +4,9 @@
 import { loadState, metersBetween, saveState, type FieldTrack } from "./fieldstore";
 
 export type Sharing = "upload" | "local" | null;
+
+// Walk recording and sharing are switched off; set to true to bring the feature back.
+export const WALK_TRACKING = false;
 const CONSENT = "unilorin-walk-sharing-v1", OWNER = "unilorin-walk-owner-v1";
 const API = process.env.NEXT_PUBLIC_API_URL;
 // Sharing is OFF unless the build says NEXT_PUBLIC_WALK_SHARING=on (set in Amplify only after the privacy review in docs/PRIVACY.md).
@@ -40,6 +43,7 @@ export function trimStart(points: [number, number][], m = TRIM_START_M): [number
 
 /** Sends every recorded walk not yet shared. Returns how many were sent. Safe to call any time; does nothing without consent. */
 export async function flushWalks(): Promise<number> {
+  if (!WALK_TRACKING) return 0;
   if (!CAN_UPLOAD || getSharing() !== "upload") return 0;
   const owner = ownerId(true); if (!owner) return 0;
   const st = loadState(), todo = st.tracks.filter((t) => t.from === "walk" && !t.uploaded);

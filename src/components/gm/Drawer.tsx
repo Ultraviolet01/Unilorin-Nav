@@ -3,6 +3,7 @@ import { type Base } from "@/lib/mapStyle";
 import { Icon } from "./icons";
 import { CAMPUS, type Tab } from "./campus";
 import { Presence } from "./Presence";
+import { WALK_TRACKING } from "@/lib/walkshare";
 
 interface Props {
   open: boolean;
@@ -25,7 +26,7 @@ export default function Drawer({ open, tab, base, bases, onClose, onSwitchTab, o
         <hr />
         {bases.map(([b, , l]) => <button key={b} className={`gm-item ${base === b ? "on" : ""}`} onClick={() => { onSetBase(b); onClose(); }}><Icon name="layers" size={22} />{l}</button>)}
         <button className="gm-item" onClick={onTravel}><Icon name="taxi" size={22} />Getting to COHS &amp; UITH</button>
-        <a className="gm-item" href="/field/"><Icon name="photo" size={22} />Field collector (team)</a>
+        {WALK_TRACKING && <a className="gm-item" href="/field/"><Icon name="photo" size={22} />Field collector (team)</a>}
         <p className="gm-fine">Map data © OpenStreetMap contributors. Icons: Material Icons (Apache-2.0).</p>
       </aside></>)}</Presence>
   );

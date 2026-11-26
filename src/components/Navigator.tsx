@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { type Category, type Mode, type Poi, type RouteOption, getRoutes, loadPois, routeMeters, searchPois } from "@/lib/pois";
-import { CAN_UPLOAD, flushWalks, forgetWalks, getSharing, setSharing, type Sharing } from "@/lib/walkshare";
+import { CAN_UPLOAD, WALK_TRACKING, flushWalks, forgetWalks, getSharing, setSharing, type Sharing } from "@/lib/walkshare";
 import { HAS_AWS_MAP, getMapStyle, type Base } from "@/lib/mapStyle";
 import { CAT, CHIP_ORDER, Icon, iconPath } from "./gm/icons";
 import PlaceDetail from "./gm/PlaceDetail";
@@ -119,7 +119,7 @@ export default function Navigator() {
   useEffect(() => { setNoteOpen(true); }, [tab]);
   useEffect(() => { try { setOnboarded(!!localStorage.getItem("unilorin-onboarded")); } catch { setOnboarded(true); } }, []);
 
-  const { nav, navInfo, following, recording, startNav, exitNav, finishNav, recenter, teardown, onUserDrag } = useLiveNav({ map, dir, setDir, setToast, setRouteData, show, setSelected, closeDirections, stopLocate, walkSavedMsg, saveWalk });
+  const { nav, navInfo, following, recording, startNav, exitNav, finishNav, recenter, teardown, onUserDrag } = useLiveNav({ map, dir, setDir, setToast, setRouteData, show, setSelected, closeDirections, stopLocate, walkSavedMsg, saveWalk: WALK_TRACKING && saveWalk });
 
   const tabPois = useMemo(() => pois.filter((p) => p.campus === tab), [pois, tab]);
   const otherPois = useMemo(() => pois.filter((p) => !tabPois.includes(p)), [pois, tabPois]);
@@ -531,8 +531,8 @@ export default function Navigator() {
                     <span className="gm-rl">{r.label}{r.custom ? "" : r.traced ? " · traced from satellite" : " · straight-line estimate"}</span></span>
                 </button>))}
               <div className="gm-pad gm-startrow">
-                <label className="gm-rec"><input type="checkbox" checked={saveWalk} onChange={(e) => onSaveToggle(e.target.checked)} /><span><b>Save my walk to improve the map</b><small>{sharing === "upload" ? (CAN_UPLOAD ? "Shared with the map team. Your name is not included." : "Sharing is paused. Kept on this phone.") : sharing === "local" ? "Kept on this phone only." : "You will be asked how it is used."}</small></span></label>
-                {sharing && (CAN_UPLOAD || sharing === "upload") && <button className="gm-rec-link" onClick={() => { setConfirmDel(false); setConsentOpen(true); }}>Change walk sharing</button>}
+                {WALK_TRACKING && <label className="gm-rec"><input type="checkbox" checked={saveWalk} onChange={(e) => onSaveToggle(e.target.checked)} /><span><b>Save my walk to improve the map</b><small>{sharing === "upload" ? (CAN_UPLOAD ? "Shared with the map team. Your name is not included." : "Sharing is paused. Kept on this phone.") : sharing === "local" ? "Kept on this phone only." : "You will be asked how it is used."}</small></span></label>}
+                {WALK_TRACKING && sharing && (CAN_UPLOAD || sharing === "upload") && <button className="gm-rec-link" onClick={() => { setConfirmDel(false); setConsentOpen(true); }}>Change walk sharing</button>}
                 <button className="gm-startbtn" onClick={startNav}><Icon name="navigate" size={20} color="#fff" /> Start</button></div>
               <p className="gm-fine">{sdir.routes[0].mode === "cab" ? "A cab stays on the roads, so you may be dropped at the nearest road and walk the last bit. Agree the fare with the driver before you get in." : sdir.routes[0].traced || !sdir.routes[0].custom ? "Footpaths are traced from satellite images and not yet walked, allow a little extra time." : "Walked and recorded by the Unilorin Navigator team."}</p>
             </>)}
