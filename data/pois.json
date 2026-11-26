@@ -544,25 +544,6 @@
     ]
   },
   {
-    "id": "dept-chemistry-block2",
-    "name": "Department of Chemistry (Block 2)",
-    "category": "faculty",
-    "lat": 8.481188,
-    "lng": 4.673813,
-    "description": "Department of Chemistry laboratory and office block (Block 2), Faculty of Physical Sciences, main campus.",
-    "photo": "",
-    "campus": "main",
-    "verified": false,
-    "source": "Plus Code 6FW6FMJF+FGQ, Nov 2026; not yet checked on the ground",
-    "aliases": [
-      "chemistry",
-      "chemistry lab",
-      "chemistry department",
-      "chemistry block",
-      "block 2 chemistry"
-    ]
-  },
-  {
     "id": "dept-physics-biochemistry-block4",
     "name": "Dept. of Physics & Biochemistry (Block 4)",
     "category": "faculty",
